@@ -118,7 +118,7 @@ public class DbOperations {
         statement.setString(1, name);
         ResultSet rs = statement.executeQuery();
         while (rs.next()) {
-            String script = rs.getString(3);
+            String script = rs.getString("PolicyScript");
             slot = script.substring(script.indexOf("slot=")+5, script.indexOf("),"));
         }
 
@@ -395,14 +395,13 @@ public class DbOperations {
             DbOperations.disconnectFromDb(connection, statement);
             return null; // No config found for user
         }
-            policySlot = rs.getString(3);
-            nftPrice = rs.getInt(5);
-            collectionSize = rs.getInt(6);
-            nftsReservedPerTx = rs.getInt(7);
-            nftsToMintPerTx = rs.getInt(8);
-            amountOfNftsNotToMint = rs.getInt(9);
-            refundPerTxLimit = rs.getInt(10);
-
+            policySlot = rs.getString("policy_slot");
+            nftPrice = rs.getInt("nft_price");
+            collectionSize = rs.getInt("collection_size");
+            nftsReservedPerTx = rs.getInt("nft_reserved_per_tx");
+            nftsToMintPerTx = rs.getInt("nft_to_mint_per_tx");
+            amountOfNftsNotToMint = rs.getInt("amount_of_nft_not_to_mint");
+            refundPerTxLimit = rs.getInt("refund_per_tx_limit");
 
         DbOperations.disconnectFromDb(connection, statement);
 

@@ -1,5 +1,5 @@
 FROM eclipse-temurin:17-jdk-alpine
-COPY target/VendingMachineBackend-1.0-SNAPSHOT.jar VendingMachineBackend.jar
+COPY target/backend-1.0-SNAPSHOT.jar VendingMachineBackend.jar
 ENTRYPOINT ["java", "-jar", "VendingMachineBackend.jar"]
 
 EXPOSE 8080

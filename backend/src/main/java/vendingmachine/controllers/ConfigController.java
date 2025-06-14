@@ -88,7 +88,6 @@ public class ConfigController extends Base {
 
         Keys keys = KeyGenUtil.generateKey();
         Policy policy = ReadMetadata.createEpochPolicy(collectionName, blockService.getLatestBlock().getValue().getSlot(), epochs, keys);
-
         DbOperations.insertPolicyWithAddress(policy, keys.getVkey().getCborHex(), keys.getSkey().getCborHex(), userWalletAddress); // save the new policy in db
 
         userConfig.setPolicy(policy);

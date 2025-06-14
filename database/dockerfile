@@ -1,0 +1,4 @@
+FROM mysql:8.0
+
+# Copy the init script into the container's init directory
+COPY init.sql /docker-entrypoint-initdb.d/
