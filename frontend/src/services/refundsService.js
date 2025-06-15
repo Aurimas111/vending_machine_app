@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8080/api/refunds/';
+const API_URL = 'https://iamaurimas.xyz/api/minter/';
 
 class refundsService {
 
