@@ -526,7 +526,9 @@ const ConfigurationPanel = ({
 
         <Divider />
 
-        <form
+        {isEditingParams ? (
+
+          <form
           style={{ display: "flex", flexDirection: "column", gap: "24px" }}
           onSubmit={handleSubmit(saveParams)}
         >
@@ -549,7 +551,7 @@ const ConfigurationPanel = ({
                       {...field}
                       type="number"
                       error={!!errors.nftPrice}
-                      InputProps={{ readOnly: !isEditingParams, inputProps: { min: 1000000 } }}
+                      InputProps={{ readOnly: false, inputProps: { min: 1000000 } }}
                     />
                     <FormHelperText>
                       The price in Lovelace required to mint one NFT (1 ADA =
@@ -600,7 +602,7 @@ const ConfigurationPanel = ({
                       {...field}
                       type="number"
                       error={!!errors.nftsReservedPerTx}
-                      InputProps={{ readOnly: !isEditingParams, inputProps: { min: 1 } }}
+                      InputProps={{ readOnly: false, inputProps: { min: 1 } }}
                     />
                     <FormHelperText>
                       Maximum number of NFTs that can be reserved in a single
@@ -625,7 +627,7 @@ const ConfigurationPanel = ({
                       {...field}
                       type="number"
                       error={!!errors.nftsToMintPerTx}
-                      InputProps={{ readOnly: !isEditingParams, inputProps: { min: 1 } }}
+                      InputProps={{ readOnly: false, inputProps: { min: 1 } }}
                     />
                     <FormHelperText>
                       Maximum number of NFTs that can be minted in a single
@@ -658,7 +660,7 @@ const ConfigurationPanel = ({
                       {...field}
                       type="number"
                       error={!!errors.nftsToNotMint}
-                      InputProps={{ readOnly: !isEditingParams, inputProps: { min: 0 } }}
+                      InputProps={{ readOnly: false, inputProps: { min: 0 } }}
                     />
                     <FormHelperText>
                       Number of NFTs in the collection that should not be
@@ -683,7 +685,7 @@ const ConfigurationPanel = ({
                       {...field}
                       type="number"
                       error={!!errors.refundsPerTxLimit}
-                      InputProps={{ readOnly: !isEditingParams, inputProps: { min: 1 } }}
+                      InputProps={{ readOnly: false, inputProps: { min: 1 } }}
                     />
                     <FormHelperText>
                       Maximum number of refunds allowed per transaction.
@@ -719,7 +721,7 @@ const ConfigurationPanel = ({
               mt: 2,
             }}
           >
-            {isEditingParams ? (
+
             <Button
               type="submit"
               variant="outlined"
@@ -730,21 +732,132 @@ const ConfigurationPanel = ({
             >
               Save Parameters
             </Button>
-          ) : (
-            <Button
-              type="button"
-              onClick={() => setIsEditingParams(true)}
-              variant="outlined"
-              startIcon={<Create />}
-              color="error"
-              sx={{ mt: 1, width: "100%" }}
-              size="medium"
-            >
-              Edit Parameters
-            </Button>
-          )}
+
           </CardActions>
         </form>
+
+        ) : (
+
+            <Box sx={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <Typography variant="h6">Minting Parameters</Typography>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                gap: "16px",
+              }}
+            >
+              <FormControl fullWidth>
+                <FormLabel>NFT Price (Lovelace)</FormLabel>
+                <TextField
+                  value={nftPrice}
+                  type="number"
+                  InputProps={{ readOnly: true }}
+                />
+                <FormHelperText>
+                  The price in Lovelace required to mint one NFT (1 ADA =
+                  1,000,000 Lovelace).
+                </FormHelperText>
+              </FormControl>
+              <FormControl fullWidth>
+                <FormLabel>Collection Size</FormLabel>
+                <TextField
+                  value={nftCount}
+                  type="number"
+                  disabled
+                />
+                <FormHelperText>
+                  The total number of NFTs in the collection. Collection size is the amount of NFT metadata entries that have been uploaded.
+                </FormHelperText>
+              </FormControl>
+            </Box>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                gap: "16px",
+              }}
+            >
+              <FormControl fullWidth>
+                <FormLabel>NFTs Reserved Per Transaction</FormLabel>
+                <TextField
+                  value={nftsReservedPerTx}
+                  type="number"
+                  InputProps={{ readOnly: true }}
+                />
+                <FormHelperText>
+                  Maximum number of NFTs that can be reserved in a single
+                  transaction.
+                </FormHelperText>
+              </FormControl>
+              <FormControl fullWidth>
+                <FormLabel>NFTs to Mint Per Transaction</FormLabel>
+                <TextField
+                  value={nftsToMintPerTx}
+                  type="number"
+                  InputProps={{ readOnly: true }}
+                />
+                <FormHelperText>
+                  Maximum number of NFTs that can be minted in a single
+                  transaction.
+                </FormHelperText>
+              </FormControl>
+            </Box>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                gap: "16px",
+              }}
+            >
+              <FormControl fullWidth>
+                <FormLabel>NFTs to Not Mint</FormLabel>
+                <TextField
+                  value={nftsToNotMint}
+                  type="number"
+                  InputProps={{ readOnly: true }}
+                />
+                <FormHelperText>
+                  Number of NFTs in the collection that should not be
+                  minted.
+                </FormHelperText>
+              </FormControl>
+              <FormControl fullWidth>
+                <FormLabel>Refunds Per Transaction Limit</FormLabel>
+                <TextField
+                  value={refundsPerTxLimit}
+                  type="number"
+                  InputProps={{ readOnly: true }}
+                />
+                <FormHelperText>
+                  Maximum number of refunds allowed per transaction.
+                </FormHelperText>
+              </FormControl>
+            </Box>
+            <CardActions
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                px: 0,
+                mt: 2,
+              }}
+            >
+              <Button
+                type="button"
+                onClick={() => setIsEditingParams(true)}
+                variant="outlined"
+                startIcon={<Create />}
+                color="error"
+                sx={{ mt: 1, width: "100%" }}
+                size="medium"
+              >
+                Edit Parameters
+              </Button>
+            </CardActions>
+          </Box>
+        )}
+
+
       </CardContent>
     </Card>
   );
