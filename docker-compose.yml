@@ -1,1 +1,40 @@
+services:
+  mysql-db:
+    image: aurimas123456/custom_mysql_db:v1.1
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    restart: always
 
+  backend:
+    image: aurimas123456/vending_machine_backend:v1.1
+    container_name: vending-backend
+    depends_on:
+      - mysql-db
+    environment:
+      BLOCKFROST_API_KEY: ${BLOCKFROST_API_KEY}
+      IPFS_API_KEY: ${IPFS_API_KEY}
+      RECOVERY_PHRASE: ${RECOVERY_PHRASE}
+      DB_URL: ${DB_URL}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "8080:8080"
+    restart: always
+
+  frontend:
+    image: aurimas123456/vending_machine_frontend:v1.7
+    container_name: vending-frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    restart: always
+
+volumes:
+  mysql-data:
