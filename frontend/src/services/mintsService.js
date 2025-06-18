@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://iamaurimas.xyz/api/minter/';
+const API_URL = import.meta.env.VITE_API_URL || 'https://iamaurimas.xyz/api/minter/';
 
 class mintsService {
 
