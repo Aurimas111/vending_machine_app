@@ -42,6 +42,7 @@ const Home = () => {
   };
 
 const connectWallet = async () => {
+
     try {
       if (!window.cardano || !window.cardano.eternl) {
         alert("Eternl Wallet not found. Please install it.");
@@ -80,9 +81,19 @@ const connectWallet = async () => {
   };
 
   useEffect(() => {
+  let tries = 0;
+  const maxTries = 20; // Try for up to 2 seconds (20 * 100ms)
+  function tryConnect() {
     if (localStorage.getItem("wallet_connected") === "true") {
-      connectWallet();
+      if (window.cardano && window.cardano.eternl) {
+        connectWallet();
+      } else if (tries < maxTries) {
+        tries++;
+        setTimeout(tryConnect, 100);
+      }
     }
+  }
+  tryConnect();
   }, []);
 
 
