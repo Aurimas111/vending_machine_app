@@ -15,13 +15,13 @@ Live App: [NFT vending machine](https://iamaurimas.xyz/vendingmachine/)
 
 ### Configuration panel
 
-![Config](images/configuration_panel.png)
+[<img src="images/configuration_panel.png" width="400"/>](images/configuration_panel.png)
 
 ### Transaction panel
-![Transactions](images/transaction_panel.png)
+![<img src="images/transaction_panel.png" width="400"/>](images/transaction_panel.png)
 
 ### NFT minting panel
-![Minting](images/minting_panel.png)
+![<img src="images/minting_panel.png" width="400"/>](images/minting_panel.png)
 
 
 ## Tech Stack
