@@ -10,7 +10,7 @@ import java.sql.SQLException;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping("/api/refunds")
+@RequestMapping("/api/minter")
 public class RefundController {
 
     // start refunds for the wallet address
