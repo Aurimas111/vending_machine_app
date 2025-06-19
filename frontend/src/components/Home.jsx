@@ -82,7 +82,8 @@ const connectWallet = async () => {
 
   useEffect(() => {
   let tries = 0;
-  const maxTries = 20; // Try for up to 2 seconds (20 * 100ms)
+  const maxTries = 50; // Try for up to 5 seconds (50 * 100ms)
+  
   function tryConnect() {
     if (localStorage.getItem("wallet_connected") === "true") {
       if (window.cardano && window.cardano.eternl) {
