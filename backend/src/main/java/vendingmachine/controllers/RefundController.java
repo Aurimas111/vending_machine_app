@@ -13,13 +13,19 @@ import java.sql.SQLException;
 @RequestMapping("/api/minter")
 public class RefundController {
 
+    private final VendingMachineService vendingMachineService;
+
+    public RefundController(VendingMachineService vendingMachineService) {
+        this.vendingMachineService = vendingMachineService;
+    }
+
     // start refunds for the wallet address
     @PostMapping("/startrefunds")
     public ResponseEntity<?> startRefunds(@RequestBody String data) throws SQLException, CborSerializationException {
 
         JSONObject obj = new JSONObject(data);
 
-        VendingMachineService.startRefunding(obj.getString("walletAddress"));
+        vendingMachineService.startRefunding(obj.getString("walletAddress"));
         return ResponseEntity.ok("Refunds started");
     }
 
@@ -29,7 +35,7 @@ public class RefundController {
 
         JSONObject obj = new JSONObject(data);
 
-        VendingMachineService.stopRefunding(obj.getString("walletAddress"));
+        vendingMachineService.stopRefunding(obj.getString("walletAddress"));
         return ResponseEntity.ok("Refunds stopped");
     }
 }

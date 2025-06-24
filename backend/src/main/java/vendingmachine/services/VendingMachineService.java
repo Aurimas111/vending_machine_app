@@ -25,7 +25,7 @@ public class VendingMachineService {
      // Initiates the NFT minting process for a specific user
      // Retrieves necessary configurations and policies, and starts a new thread to process the minting logic.
      // If a minting session for the user is already active, the method will not initiate a new one.
-    public static void startMinting(String userAddress) throws SQLException, CborSerializationException {
+    public void startMinting(String userAddress) throws SQLException, CborSerializationException {
         if (activeSessions.containsKey(userAddress)) {
             System.out.println("Minting already in progress for user: " + userAddress);
             return;
@@ -58,7 +58,7 @@ public class VendingMachineService {
     }
 
     // Stops the minting process for a specific user by setting the stop flag in the session
-    public static void stopMinting(String userAddress) {
+    public void stopMinting(String userAddress) {
         Session session = activeSessions.get(userAddress);
         if (session != null) {
             session.stop();
@@ -70,7 +70,7 @@ public class VendingMachineService {
 
     // Initiates the refunding process for a specific user
     // Retrieves necessary configurations and policies, and starts a new thread to process the refunding logic.
-    public static void startRefunding(String userAddress) throws SQLException, CborSerializationException {
+    public void startRefunding(String userAddress) throws SQLException, CborSerializationException {
 
         if (activeSessions.containsKey(userAddress)) {
             System.out.println("Refunding already in progress for user: " + userAddress);
@@ -104,7 +104,7 @@ public class VendingMachineService {
     }
 
     // Stops the refunding process for a specific user by setting the stop flag in the session
-    public static void stopRefunding(String userAddress){
+    public void stopRefunding(String userAddress){
         Session session = activeSessions.get(userAddress);
         if (session != null) {
             session.stop();
