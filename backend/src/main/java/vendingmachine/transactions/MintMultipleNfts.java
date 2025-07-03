@@ -102,20 +102,13 @@ public class MintMultipleNfts extends Base {
                     System.out.println();
 
                     // loop until we have enough addresses
-
                     if(notMintedAddress.size()==mintLimitPerTx) {
                         MintMultipleNfts.mintNfts(policy, metadataNotMinted, slot, sender, notMintedAddress, txHashNotMinted, amountsToMint, mintLimitPerTx);
-                        /*if (stopFlag.get()) {
-                            System.out.println("Minting stopped externally.");
-                            break; // Exit loop early if flag is false
-                        }*/
 
                         System.out.println("sleeping for 10 seconds");
                         TimeUnit.SECONDS.sleep(10);
                     }
                 }
-                //if(!stopFlag.get())
-                //    System.out.println("NFTs for all received transactions are minted, or not enough transactions received to mint " + mintLimitPerTx + " NFTs");
 
         }else {
             System.out.println("All NFTs minted!");
