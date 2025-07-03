@@ -26,7 +26,7 @@ Live App: [NFT vending machine](https://iamaurimas.xyz/vendingmachine/)
 
 ## Tech Stack
 
-**Frontend:** React, TailwindCSS
+**Frontend:** React
 
 **Backend:** Java Spring
 

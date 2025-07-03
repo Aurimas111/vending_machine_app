@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Tabs, Tab, Box, Card, Typography } from "@mui/material";
-import ConfigurationPanel from "./ConfigurationPanel";
+import ConfigurationPanel from "./ConfigPanel/ConfigurationPanel";
 import TransactionMonitor from "./TransactionMonitor";
 import MintingDashboard from "./MintingDashboard";
 
@@ -60,8 +60,8 @@ const Dashboard = ({ className = "", walletAddress, activeTab, setActiveTab }) =
               variant="fullWidth"
             >
               <Tab label="Configuration" value="configuration" />
-              <Tab label="Transaction Monitor" value="transactions" />
-              <Tab label="Minting Dashboard" value="minting" />
+              <Tab label="Transaction Monitoring" value="transactions" />
+              <Tab label="Collection Status" value="minting" />
             </Tabs>
 
             <TabPanel value={activeTab} index="configuration">

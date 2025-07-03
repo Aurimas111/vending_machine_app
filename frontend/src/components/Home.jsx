@@ -4,6 +4,8 @@ import {
   LightMode as SunIcon,
   Wallet as WalletIcon,
   Logout as LogoutIcon,
+  PowerSettingsNew as PowerIcon,
+  RefreshOutlined as RefreshIcon,
 } from "@mui/icons-material";
 import {
   Button,
@@ -19,6 +21,9 @@ import {
   Container,
   Grid,
   Switch,
+  Chip,
+  Paper,
+  alpha,
 } from "@mui/material";
 
 import Dashboard from "./Dashboard";
@@ -101,6 +106,68 @@ const connectWallet = async () => {
   const theme = createTheme({
     palette: {
       mode: isDarkMode ? "dark" : "light",
+      primary: {
+        main: isDarkMode ? "#ffffff" : "#000000",
+        light: isDarkMode ? "#f5f5f5" : "#333333",
+        dark: isDarkMode ? "#e0e0e0" : "#000000",
+      },
+      secondary: {
+        main: isDarkMode ? "#424242" : "#666666",
+      },
+      background: {
+        default: isDarkMode ? "#0f172a" : "#f8fafc",
+        paper: isDarkMode ? "#1e293b" : "#ffffff",
+      },
+      success: {
+        main: "#10b981",
+        light: "#34d399",
+        dark: "#059669",
+      },
+      error: {
+        main: "#ef4444",
+        light: "#f87171",
+        dark: "#dc2626",
+      },
+    },
+    typography: {
+      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+      h6: {
+        fontWeight: 600,
+      },
+    },
+    components: {
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            borderRadius: 12,
+            textTransform: 'none',
+            fontWeight: 600,
+            padding: '10px 24px',
+          },
+        },
+      },
+      MuiCard: {
+        styleOverrides: {
+          root: {
+            borderRadius: 16,
+            boxShadow: isDarkMode 
+              ? '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)' 
+              : '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+          },
+        },
+      },
+      MuiAppBar: {
+        styleOverrides: {
+          root: {
+            backdropFilter: 'blur(20px)',
+            backgroundColor: isDarkMode 
+              ? alpha('#1e293b', 0.8) 
+              : alpha('#ffffff', 0.8),
+            boxShadow: 'none',
+            borderBottom: `1px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`,
+          },
+        },
+      },
     },
   });
 
@@ -143,99 +210,278 @@ const handleRefundToggle = async (checked) => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-        <AppBar position="sticky" color="default" elevation={1}>
-          <Toolbar sx={{ px: 2 }}>
-            <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+      <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", bgcolor: 'background.default' }}>
+        <AppBar position="sticky" color="default" elevation={0}>
+          <Toolbar sx={{ px: 3, py: 1 }}>
+            <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+              <Box sx={{ 
+                width: 40, 
+                height: 40, 
+                borderRadius: 2, 
+                bgcolor: 'primary.main', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                mr: 2
+              }}>
+                <Typography variant="h6" sx={{ color: isDarkMode ? 'black' : 'white', fontWeight: 'bold' }}>
+                  N
+                </Typography>
+              </Box>
+              <Typography variant="h6" sx={{ fontWeight: "bold", color: 'text.primary' }}>
                 NFT Vending Machine
               </Typography>
             </Box>
 
-          <Switch
-            checked={isVendingMachineActive}
-            onChange={(e) => handleVendingToggle(e.target.checked)}
-            color="primary"
-            disabled={switchDisabled || refundActive}
-          />
-          <Typography
-            variant="body2"
-            sx={{ fontWeight: "bold", color: isVendingMachineActive ? "green" : "red", ml: 1 }}
-          >
-            {isVendingMachineActive ? "Vending Enabled" : "Vending Disabled"}
-          </Typography>
-
-          <Switch
-            checked={refundActive}
-            onChange={(e) => handleRefundToggle(e.target.checked)}
-            color="primary"
-            disabled={switchDisabled || isVendingMachineActive}
-          />
-          <Typography
-            variant="body2"
-            sx={{ fontWeight: "bold", color: refundActive ? "green" : "red", ml: 1 }}
-          >
-            {refundActive ? "Refunds Enabled" : "Refunds Disabled"}
-          </Typography>
-
-                      <Button
-              variant="text"
-              color="inherit"
-              onClick={() => console.log("Help clicked")}
-              sx={{ ml: 2 }}
-              ></Button>
-
-            {isWalletConnected && (
-              <>
-                <Typography variant="body2" sx={{ fontSize: "0.8rem", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {walletAddress}
-                </Typography>
-              </>
-            )}
-
-            <Button
-              variant={isWalletConnected ? "outlined" : "contained"}
-              onClick={isWalletConnected ? disconnectWallet : connectWallet}
-              startIcon={isWalletConnected ? <LogoutIcon /> : <WalletIcon />}
+            {/* Status Controls */}
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 3, 
+                px: 3, 
+                py: 1.5, 
+                bgcolor: alpha(theme.palette.background.paper, 0.7),
+                backdropFilter: 'blur(10px)',
+                borderRadius: 3,
+                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                mr: 2
+              }}
             >
-              {isWalletConnected ? "Disconnect" : "Connect Wallet"}
-            </Button>
-            <IconButton onClick={toggleTheme} color="inherit">
-              {isDarkMode ? <SunIcon /> : <MoonIcon />}
-            </IconButton>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <PowerIcon sx={{ fontSize: 20, color: isVendingMachineActive ? 'success.main' : 'text.disabled' }} />
+                <Switch
+                  checked={isVendingMachineActive}
+                  onChange={(e) => handleVendingToggle(e.target.checked)}
+                  color="success"
+                  disabled={!isWalletConnected || switchDisabled || refundActive}
+                  size="small"
+                />
+                <Chip
+                  label={isVendingMachineActive ? "Vending Active" : "Vending Inactive"}
+                  size="small"
+                  color={isVendingMachineActive ? "success" : "error"}
+                  variant="outlined"
+                  sx={{ fontWeight: 600, fontSize: '0.75rem' }}
+                />
+              </Box>
+
+              <Box sx={{ width: 1, height: 24, bgcolor: 'divider' }} />
+
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <RefreshIcon sx={{ fontSize: 20, color: refundActive ? 'success.main' : 'text.disabled' }} />
+                <Switch
+                  checked={refundActive}
+                  onChange={(e) => handleRefundToggle(e.target.checked)}
+                  color="success"
+                  disabled={!isWalletConnected || switchDisabled || isVendingMachineActive}
+                  size="small"
+                />
+                <Chip
+                  label={refundActive ? "Refunds Active" : "Refunds Inactive"}
+                  size="small"
+                  color={refundActive ? "success" : "error"}
+                  variant="outlined"
+                  sx={{ fontWeight: 600, fontSize: '0.75rem' }}
+                />
+              </Box>
+            </Paper>
+
+            {/* Wallet Section */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {isWalletConnected && (
+                <Paper 
+                  elevation={0}
+                  sx={{ 
+                    px: 2, 
+                    py: 1, 
+                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                    borderRadius: 2
+                  }}
+                >
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      fontSize: "0.75rem", 
+                      maxWidth: 120, 
+                      overflow: "hidden", 
+                      textOverflow: "ellipsis",
+                      fontFamily: 'monospace',
+                      color: 'primary.main',
+                      fontWeight: 600
+                    }}
+                  >
+                    {walletAddress.slice(0, 8)}...{walletAddress.slice(-6)}
+                  </Typography>
+                </Paper>
+              )}
+
+              <Button
+                variant={isWalletConnected ? "outlined" : "contained"}
+                onClick={isWalletConnected ? disconnectWallet : connectWallet}
+                startIcon={isWalletConnected ? <LogoutIcon /> : <WalletIcon />}
+                sx={{ 
+                  borderRadius: 3,
+                  px: 3,
+                  bgcolor: isWalletConnected ? 'transparent' : 'primary.main',
+                  color: isWalletConnected ? 'primary.main' : (isDarkMode ? 'black' : 'white'),
+                  '&:hover': {
+                    bgcolor: isWalletConnected ? alpha(theme.palette.primary.main, 0.1) : 'primary.dark',
+                  }
+                }}
+              >
+                {isWalletConnected ? "Disconnect" : "Connect Wallet"}
+              </Button>
+
+              <IconButton 
+                onClick={toggleTheme} 
+                color="inherit"
+                sx={{ 
+                  bgcolor: alpha(theme.palette.background.paper, 0.7),
+                  '&:hover': {
+                    bgcolor: alpha(theme.palette.background.paper, 0.9),
+                  }
+                }}
+              >
+                {isDarkMode ? <SunIcon /> : <MoonIcon />}
+              </IconButton>
+            </Box>
           </Toolbar>
         </AppBar>
 
-        <Container sx={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", py: 3 }}>
-          <Grid container spacing={3} sx={{ justifyContent: "center", alignItems: "center" }}>
-            <Grid item xs={12} sm={8} md={6} lg={4}>
+        <Container 
+          maxWidth="lg" 
+          sx={{ 
+            flex: 1, 
+            display: "flex", 
+            justifyContent: "center", 
+            alignItems: "center", 
+            py: 4,
+            px: { xs: 2, sm: 3 }
+          }}
+        >
+          <Grid container spacing={4} sx={{ justifyContent: "center", alignItems: "center" }}>
+            <Grid item xs={12} lg={10} xl={8}>
               {!isWalletConnected ? (
-                <Card sx={{ display: "flex", flexDirection: "column", alignItems: "center", p: { xs: 4, sm: 6 }, textAlign: "center" }}>
-                  <WalletIcon sx={{ fontSize: 48, mb: 2, color: "text.secondary" }} />
-                  <Typography variant="h5" component="h2" sx={{ mb: 1, fontWeight: "bold" }}>
+                <Card 
+                  sx={{ 
+                    display: "flex", 
+                    flexDirection: "column", 
+                    alignItems: "center", 
+                    p: { xs: 6, sm: 8 }, 
+                    textAlign: "center",
+                    bgcolor: 'background.paper',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: 4,
+                      background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                    }
+                  }}
+                >
+                  <Box sx={{ 
+                    width: 80, 
+                    height: 80, 
+                    borderRadius: '50%', 
+                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mb: 3
+                  }}>
+                    <WalletIcon sx={{ fontSize: 40, color: "primary.main" }} />
+                  </Box>
+                  <Typography 
+                    variant="h4" 
+                    component="h2" 
+                    sx={{ 
+                      mb: 2, 
+                      fontWeight: "bold",
+                      background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                      backgroundClip: 'text',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      fontSize: { xs: '1.75rem', sm: '2.125rem' }
+                    }}
+                  >
                     Connect Your Wallet
                   </Typography>
-                  <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                    Connect your Cardano wallet to configure and monitor the NFT vending machine.
+                  <Typography 
+                    variant="body1" 
+                    color="text.secondary" 
+                    sx={{ 
+                      mb: 4, 
+                      maxWidth: 400,
+                      lineHeight: 1.6,
+                      fontSize: '1.1rem'
+                    }}
+                  >
+                    Connect your Cardano wallet to configure and monitor your NFT vending machine. 
                   </Typography>
-                  <Button variant="contained" onClick={connectWallet} startIcon={<WalletIcon />}>
+                  <Button 
+                    variant="contained" 
+                    size="large"
+                    onClick={connectWallet} 
+                    startIcon={<WalletIcon />}
+                    sx={{ 
+                      px: 4, 
+                      py: 1.5,
+                      fontSize: '1rem',
+                      background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                      color: isDarkMode ? 'black' : 'white',
+                      boxShadow: `0 4px 14px 0 ${alpha(theme.palette.primary.main, 0.4)}`,
+                      '&:hover': {
+                        background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                        boxShadow: `0 6px 20px 0 ${alpha(theme.palette.primary.main, 0.6)}`,
+                      }
+                    }}
+                  >
                     Connect Wallet
                   </Button>
                 </Card>
               ) : (
                 <Dashboard 
-                walletAddress={walletAddress} 
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
+                  walletAddress={walletAddress} 
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
                 />
               )}
             </Grid>
           </Grid>
         </Container>
 
-        <Box component="footer" sx={{ borderTop: 1, borderColor: "divider", bgcolor: "background.paper", mt: "auto" }}>
+        <Box 
+          component="footer" 
+          sx={{ 
+            borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+            bgcolor: alpha(theme.palette.background.paper, 0.7),
+            backdropFilter: 'blur(20px)',
+            mt: "auto"
+          }}
+        >
           <Container sx={{ display: "flex", height: 64, alignItems: "center", justifyContent: "space-between" }}>
-            <Typography variant="body2" color="text.secondary">Powered by Cardano Blockchain</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+              Powered by Cardano Blockchain
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ 
+                width: 8, 
+                height: 8, 
+                borderRadius: '50%', 
+                bgcolor: 'success.main',
+                animation: 'pulse 2s infinite'
+              }} />
+              <Typography variant="caption" color="text.secondary">
+                Network Active
+              </Typography>
+            </Box>
           </Container>
         </Box>
       </Box>

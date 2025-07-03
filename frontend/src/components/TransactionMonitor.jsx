@@ -16,8 +16,8 @@ import Alert from "@mui/material/Alert";
 import LinearProgress from "@mui/material/LinearProgress";
 import Paper from "@mui/material/Paper";
 import Grid from "@mui/material/Grid";
-import Divider from "@mui/material/Divider";
 import Tooltip from "@mui/material/Tooltip";
+import { alpha, useTheme } from "@mui/material/styles";
 
 import {
   Refresh as RefreshIcon,
@@ -25,10 +25,15 @@ import {
   CheckCircle as CheckCircleIcon,
   AccessTime as ClockIcon,
   Loop as LoaderIcon,
+  Wallet as WalletIcon,
+  TrendingUp as TrendingUpIcon,
+  AccountBalanceWallet as BalanceIcon,
+  Token as TokenIcon,
 } from "@mui/icons-material";
 import transactionsService from "../services/transactionsService";
 
 const TransactionMonitor = ({walletAddress}) => {
+  const theme = useTheme();
   const [nftsToMint, setNftsToMint] = useState(0);
   const [nftsMinted, setNftsMinted] = useState(0);
   const [adaPrice, setAdaPrice] = useState(0);
@@ -102,22 +107,88 @@ useEffect(() => {
     switch (status) {
       case "Pending":
         return (
-          <Chip icon={<ClockIcon fontSize="small" />} label="Pending" variant="outlined" size="small" />
+          <Chip 
+            icon={<ClockIcon fontSize="small" />} 
+            label="Pending" 
+            variant="outlined" 
+            size="small"
+            sx={{
+              bgcolor: alpha(theme.palette.warning.main, 0.1),
+              color: 'warning.main',
+              borderColor: 'warning.main',
+              fontWeight: 600,
+            }}
+          />
         );
       case "Minting":
         return (
-          <Chip icon={<LoaderIcon fontSize="small" className="animate-spin" />} label="Minting" color="primary" size="small" />
+          <Chip 
+            icon={
+              <LoaderIcon 
+                fontSize="small" 
+                sx={{
+                  animation: 'spin 1s linear infinite',
+                  '@keyframes spin': {
+                    '0%': {
+                      transform: 'rotate(0deg)',
+                    },
+                    '100%': {
+                      transform: 'rotate(360deg)',
+                    },
+                  },
+                }}
+              />
+            } 
+            label="Minting" 
+            color="primary" 
+            size="small"
+            sx={{
+              bgcolor: alpha(theme.palette.primary.main, 0.1),
+              color: 'primary.main',
+              fontWeight: 600,
+            }}
+          />
         );
       case "Minted":
         return (
-          <Chip icon={<CheckCircleIcon fontSize="small" />} label="Minted" color="success" size="small" />
+          <Chip 
+            icon={<CheckCircleIcon fontSize="small" />} 
+            label="Minted" 
+            color="success" 
+            size="small"
+            sx={{
+              bgcolor: alpha(theme.palette.success.main, 0.1),
+              color: 'success.main',
+              fontWeight: 600,
+            }}
+          />
         );
       case "Failed":
         return (
-          <Chip icon={<AlertCircleIcon fontSize="small" />} label="Failed" color="error" size="small" />
+          <Chip 
+            icon={<AlertCircleIcon fontSize="small" />} 
+            label="Failed" 
+            color="error" 
+            size="small"
+            sx={{
+              bgcolor: alpha(theme.palette.error.main, 0.1),
+              color: 'error.main',
+              fontWeight: 600,
+            }}
+          />
         );
       default:
-        return <Chip label={status} size="small" />;
+        return (
+          <Chip 
+            label={status} 
+            size="small"
+            sx={{
+              bgcolor: alpha(theme.palette.grey[500], 0.1),
+              color: 'text.secondary',
+              fontWeight: 600,
+            }}
+          />
+        );
     }
   };
 
@@ -125,146 +196,414 @@ useEffect(() => {
   return `${(lovelace / 1_000_000).toFixed(2)} ADA`;
 };
 
+  const progressPercentage = nftsToMint > 0 ? (nftsMinted / nftsToMint) * 100 : 0;
 
   return (
-    <Card sx={{ width: "100%", bgcolor: "background.paper" }}>
+    <Card 
+      sx={{ 
+        width: "100%", 
+        bgcolor: "background.paper",
+        borderRadius: 3,
+        boxShadow: theme.palette.mode === 'dark' 
+          ? '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)' 
+          : '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        position: 'relative',
+        overflow: 'hidden',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 4,
+          background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+        }
+      }}
+    >
       <CardHeader
-        title="Transaction Monitor"
-          subheader={
-    <Box sx={{
-      display: "flex",
-      alignItems: "center",
-      flexWrap: "wrap",
-      gap: 1,
-      minWidth: 0,
-    }}>
-      <span style={{
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
-
-        display: "inline-block",
-        verticalAlign: "middle"
-      }}>
-        <Tooltip title={monitoringAddress}>
-        Monitoring wallet address: {monitoringAddress.slice(0, 14)}...{monitoringAddress.slice(-6)}
-        </Tooltip>
-
-      </span>
-    </Box>
-  }
+        title={
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ 
+              width: 48, 
+              height: 48, 
+              borderRadius: 2, 
+              bgcolor: alpha(theme.palette.primary.main, 0.1),
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center'
+            }}>
+              <TrendingUpIcon sx={{ color: 'primary.main', fontSize: 24 }} />
+            </Box>
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+                Received transactions
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                Transaction activity in real time
+              </Typography>
+            </Box>
+          </Box>
+        }
+        subheader={
+          <Box sx={{
+            display: "flex",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 1,
+            minWidth: 0,
+            mt: 2,
+            mb: 2,
+            px: 1,
+          }}>
+            <Paper 
+              elevation={0}
+              sx={{ 
+                px: 3, 
+                py: 1, 
+                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                borderRadius: 2,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}
+            >
+              <WalletIcon sx={{ fontSize: 16, color: 'primary.main' }} />
+              <Typography variant="caption" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                Monitoring:
+              </Typography>
+              <Tooltip title={monitoringAddress}>
+                <Typography 
+                  variant="caption" 
+                  sx={{
+                    fontFamily: 'monospace',
+                    fontWeight: 600,
+                    color: 'primary.main',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {monitoringAddress.slice(0, 8)}...{monitoringAddress.slice(-6)}
+                </Typography>
+              </Tooltip>
+            </Paper>
+          </Box>
+        }
         action={
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Button variant="outlined" size="medium" onClick={() => setAutoRefresh(!autoRefresh)}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Paper 
+              elevation={0}
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1, 
+                px: 2, 
+                py: 1, 
+                bgcolor: alpha(theme.palette.background.paper, 0.7),
+                border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+                borderRadius: 2
+              }}
+            >
+              <Box sx={{ 
+                width: 8, 
+                height: 8, 
+                borderRadius: '50%', 
+                bgcolor: autoRefresh ? 'success.main' : 'grey.400',
+                animation: autoRefresh ? 'pulse 2s infinite' : 'none'
+              }} />
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                Updated: {lastUpdated.toLocaleTimeString()}
+              </Typography>
+            </Paper>
+            <Button 
+              variant={autoRefresh ? "contained" : "outlined"}
+              size="medium" 
+              onClick={() => setAutoRefresh(!autoRefresh)}
+              sx={{ 
+                borderRadius: 2,
+                px: 3,
+                fontWeight: 600,
+                textTransform: 'none',
+                bgcolor: autoRefresh ? 'success.main' : 'transparent',
+                color: autoRefresh ? 'white' : 'success.main',
+                '&:hover': {
+                  bgcolor: autoRefresh ? 'success.dark' : alpha(theme.palette.success.main, 0.1),
+                }
+              }}
+            >
               {autoRefresh ? "Auto-refresh On" : "Auto-refresh Off"}
             </Button>
             <Button
               variant="outlined"
-              size="small"
+              size="medium"
               onClick={fetchTransactions}
               disabled={isLoading}
-              sx={{ minWidth: 0, p: 1 }}
+              sx={{ 
+                minWidth: 48,
+                width: 48,
+                height: 48,
+                borderRadius: 2,
+                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                borderColor: alpha(theme.palette.primary.main, 0.2),
+                '&:hover': {
+                  bgcolor: alpha(theme.palette.primary.main, 0.2),
+                }
+              }}
             >
               {isLoading ? (
-                <LoaderIcon fontSize="small" className="animate-spin" />
+                <LoaderIcon 
+                  fontSize="small" 
+                  sx={{ 
+                    color: 'primary.main',
+                    animation: 'spin 1s linear infinite',
+                    '@keyframes spin': {
+                      '0%': {
+                        transform: 'rotate(0deg)',
+                      },
+                      '100%': {
+                        transform: 'rotate(360deg)',
+                      },
+                    },
+                  }} 
+                />
               ) : (
-                <RefreshIcon fontSize="small" />
+                <RefreshIcon fontSize="small" sx={{ color: 'primary.main' }} />
               )}
             </Button>
           </Box>
         }
+        sx={{ pb: 0 }}
       />
-      <Typography variant="caption" color="text.secondary" sx={{ px: 2, pb: 2, display: "block" }}>
-        Last updated: {lastUpdated.toLocaleString()}
-      </Typography>
 
-      {/* Updated NFT Minting Stats */}
-      <Box sx={{ px: 2, pb: 2 }}>
-        <Paper elevation={2} sx={{ p: 2, display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={4} >
-              <Typography variant="subtitle2" color="text.secondary">
-                NFTs in Collection:
-              </Typography>
-              <Typography variant="h6" color="text.primary">
-                {nftsToMint}
-              </Typography>
+      {/* NFT Stats Section */}
+      <Box sx={{ px: 3, pb: 3}}>
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            p: 3, 
+            bgcolor: alpha(theme.palette.background.paper, 0.7),
+            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+            borderRadius: 3,
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+        >
+          <Grid container spacing={3} alignItems="center" justifyContent="center">
+            <Grid item xs={12} sm={4}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box sx={{ 
+                  width: 48, 
+                  height: 48, 
+                  borderRadius: 2, 
+                  bgcolor: alpha(theme.palette.info.main, 0.1),
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center'
+                }}>
+                  <TokenIcon sx={{ color: 'info.main', fontSize: 24 }} />
+                </Box>
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+                    {nftsToMint}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                    Total Collection
+                  </Typography>
+                </Box>
+              </Box>
             </Grid>
-            <Grid item xs={4}>
-              <Typography variant="subtitle2" color="text.secondary">
-                NFTs Minted:
-              </Typography>
-              <Typography variant="h6" color="text.primary">
-                {nftsMinted} / {nftsToMint}
-              </Typography>
+            
+            <Grid item xs={12} sm={4}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box sx={{ 
+                  width: 48, 
+                  height: 48, 
+                  borderRadius: 2, 
+                  bgcolor: alpha(theme.palette.success.main, 0.1),
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center'
+                }}>
+                  <CheckCircleIcon sx={{ color: 'success.main', fontSize: 24 }} />
+                </Box>
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+                    {nftsMinted}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                    Minted ({progressPercentage.toFixed(1)}%)
+                  </Typography>
+                </Box>
+              </Box>
             </Grid>
-            <Grid item xs={4}>
-              <Typography variant="subtitle2" color="text.secondary">
-                Price per NFT:
-              </Typography>
-              <Typography variant="h6" color="text.primary">
-                {adaPrice} ADA
-              </Typography>
+            
+            <Grid item xs={12} sm={4}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box sx={{ 
+                  width: 48, 
+                  height: 48, 
+                  borderRadius: 2, 
+                  bgcolor: alpha(theme.palette.warning.main, 0.1),
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center'
+                }}>
+                  <BalanceIcon sx={{ color: 'warning.main', fontSize: 24 }} />
+                </Box>
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+                    {adaPrice}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                    ADA per NFT
+                  </Typography>
+                </Box>
+              </Box>
             </Grid>
           </Grid>
-            <Box sx={{ width: "100%", mt: 2 }}>
+          
+          <Box sx={{ mt: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                Minting Progress
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                {nftsMinted} / {nftsToMint}
+              </Typography>
+            </Box>
             <LinearProgress
               variant="determinate"
-              value={nftsToMint > 0 ? (nftsMinted / nftsToMint) * 100 : 0}
+              value={progressPercentage}
               sx={{
-                    '& .MuiLinearProgress-bar': {
-                      backgroundColor: '#d32f2f', // Material-UI red[700]
-                    },
-                    backgroundColor: '#ffebee', // Material-UI red[50]
-                  }}
+                height: 8,
+                borderRadius: 4,
+                bgcolor: alpha(theme.palette.success.main, 0.1),
+                '& .MuiLinearProgress-bar': {
+                  borderRadius: 4,
+                  background: `linear-gradient(90deg, ${theme.palette.success.main}, ${theme.palette.success.light})`,
+                },
+              }}
             />
           </Box>
         </Paper>
       </Box>
 
-      <Divider sx={{ mx: 2, mb: 2 }} />
-
-      <CardContent>
+      <CardContent sx={{ pt: 0 }}>
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert 
+            severity="error" 
+            sx={{ 
+              mb: 3,
+              borderRadius: 2,
+              bgcolor: alpha(theme.palette.error.main, 0.1),
+              color: 'error.main',
+              border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`,
+              '& .MuiAlert-icon': {
+                color: 'error.main'
+              }
+            }}
+          >
             {error}
           </Alert>
         )}
 
         {isLoading && (
-          <Box sx={{ mb: 2 }}>
-            <LinearProgress />
+          <Box sx={{ mb: 3 }}>
+            <LinearProgress 
+              sx={{
+                height: 4,
+                borderRadius: 2,
+                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                '& .MuiLinearProgress-bar': {
+                  borderRadius: 2,
+                  background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
+                },
+              }}
+            />
           </Box>
         )}
 
-        <TableContainer component={Paper} variant="outlined">
+        <TableContainer 
+          component={Paper} 
+          variant="outlined"
+          sx={{
+            borderRadius: 3,
+            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+            bgcolor: alpha(theme.palette.background.paper, 0.7),
+            backdropFilter: 'blur(10px)',
+            overflow: 'hidden'
+          }}
+        >
           <Table size="small">
             <TableHead>
-              <TableRow>
-                <TableCell>Sender Address</TableCell>
-                <TableCell>Amount Sent</TableCell>
-                <TableCell>Timestamp</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Refund</TableCell>
-                <TableCell>NFTs Minted </TableCell>
-                <TableCell>NFTs To mint</TableCell>
-                <TableCell>Transaction Hash</TableCell>
+              <TableRow sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
+                <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', py: 2 }}>Sender Address</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', py: 2 }}>Amount Sent</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', py: 2 }}>Timestamp</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', py: 2 }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', py: 2 }}>Refund</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', py: 2 }}>NFTs Minted</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', py: 2 }}>NFTs To Mint</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', py: 2 }}>Transaction Hash</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {transactions.length > 0 ? (
-                transactions.map((tx) => (
-                  <TableRow key={tx.id}>
-                  <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-                    <Tooltip title={tx.senderAddress}>
-                      <span>{tx.senderAddress.slice(0, 10)}...{tx.senderAddress.slice(-6)}</span>
-                    </Tooltip>
-                  </TableCell>
+                transactions.map((tx, index) => (
+                  <TableRow 
+                    key={tx.id}
+                    sx={{
+                      '&:nth-of-type(odd)': {
+                        bgcolor: alpha(theme.palette.action.hover, 0.02),
+                      },
+                      '&:hover': {
+                        bgcolor: alpha(theme.palette.action.hover, 0.05),
+                      },
+                      transition: 'background-color 0.2s ease'
+                    }}
+                  >
+                    <TableCell sx={{ py: 2 }}>
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          px: 2,
+                          py: 1,
+                          bgcolor: alpha(theme.palette.primary.main, 0.05),
+                          border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                          borderRadius: 2,
+                          display: 'inline-block'
+                        }}
+                      >
+                        <Tooltip title={tx.senderAddress}>
+                          <Typography 
+                            variant="caption" 
+                            sx={{ 
+                              fontFamily: "monospace", 
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              color: 'primary.main'
+                            }}
+                          >
+                            {tx.senderAddress.slice(0, 8)}...{tx.senderAddress.slice(-6)}
+                          </Typography>
+                        </Tooltip>
+                      </Paper>
+                    </TableCell>
 
-                    <TableCell>{formatAda(tx.amount)}</TableCell>
-                    <TableCell sx={{ minWidth: "200px", fontSize: "0.85rem"}}>{formatTimestamp(tx.blockTime)}</TableCell>
-                    <TableCell>{getStatusBadge(tx.status)}</TableCell>
-                    <TableCell>
+                    <TableCell sx={{ py: 2 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                        {formatAda(tx.amount)}
+                      </Typography>
+                    </TableCell>
+                    
+                    <TableCell sx={{ py: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                        {formatTimestamp(tx.blockTime)}
+                      </Typography>
+                    </TableCell>
+                    
+                    <TableCell sx={{ py: 2 }}>{getStatusBadge(tx.status)}</TableCell>
+                    
+                    <TableCell sx={{ py: 2 }}>
                       {tx.refund > 0 ? (
                         <Tooltip title={tx.refunded === true ? "Refunded" : "Not refunded"}>
                           <Chip
@@ -272,26 +611,85 @@ useEffect(() => {
                             color={tx.refunded === true ? "success" : "error"}
                             size="small"
                             variant="filled"
+                            sx={{
+                              fontWeight: 600,
+                              bgcolor: tx.refunded === true 
+                                ? alpha(theme.palette.success.main, 0.1)
+                                : alpha(theme.palette.error.main, 0.1),
+                              color: tx.refunded === true ? 'success.main' : 'error.main',
+                            }}
                           />
                         </Tooltip>
                       ) : (
-                        "---"
+                        <Typography variant="body2" color="text.disabled" sx={{ fontStyle: 'italic' }}>
+                          No refund
+                        </Typography>
                       )}
                     </TableCell>
 
-                    <TableCell>{tx.amountMinted}</TableCell>
-                    <TableCell>{tx.amountToMint}</TableCell>
-                    <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-                      <Tooltip title={tx.txHash}>
-                        <span>{tx.txHash.slice(0, 6)}...{tx.txHash.slice(-4)}</span>
-                      </Tooltip>
+                    <TableCell sx={{ py: 2 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                        {tx.amountMinted}
+                      </Typography>
+                    </TableCell>
+                    
+                    <TableCell sx={{ py: 2 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                        {tx.amountToMint}
+                      </Typography>
+                    </TableCell>
+                    
+                    <TableCell sx={{ py: 2 }}>
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          px: 2,
+                          py: 1,
+                          bgcolor: alpha(theme.palette.secondary.main, 0.05),
+                          border: `1px solid ${alpha(theme.palette.secondary.main, 0.1)}`,
+                          borderRadius: 2,
+                          display: 'inline-block'
+                        }}
+                      >
+                        <Tooltip title={tx.txHash}>
+                          <Typography 
+                            variant="caption" 
+                            sx={{ 
+                              fontFamily: "monospace", 
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              color: 'secondary.main'
+                            }}
+                          >
+                            {tx.txHash.slice(0, 6)}...{tx.txHash.slice(-4)}
+                          </Typography>
+                        </Tooltip>
+                      </Paper>
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 3, color: "text.secondary" }}>
-                    No transactions found
+                  <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                      <Box sx={{ 
+                        width: 64, 
+                        height: 64, 
+                        borderRadius: '50%', 
+                        bgcolor: alpha(theme.palette.grey[500], 0.1),
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <TrendingUpIcon sx={{ fontSize: 32, color: 'text.disabled' }} />
+                      </Box>
+                      <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 600 }}>
+                        No transactions found
+                      </Typography>
+                      <Typography variant="body2" color="text.disabled">
+                        Transactions will appear here once vending machine receives payments
+                      </Typography>
+                    </Box>
                   </TableCell>
                 </TableRow>
               )}
