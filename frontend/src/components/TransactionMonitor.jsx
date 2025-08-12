@@ -54,7 +54,15 @@ const fetchTransactions = async () => {
     const response = await transactionsService.getTransactions({ address: walletAddress });
     const data = response.data;
 
-    setTransactions(data.transactions);
+    // Sort transactions by blockTime
+    const sortedTransactions = data.transactions.sort((a, b) => {
+      
+      const timeA = a.blockTime < 1e12 ? a.blockTime * 1000 : a.blockTime;
+      const timeB = b.blockTime < 1e12 ? b.blockTime * 1000 : b.blockTime;
+      return timeA - timeB; // Sort
+    });
+
+    setTransactions(sortedTransactions);
     setNftsToMint(data.totalNFTCount);
     setNftsMinted(data.mintedNFTCount);
     setAdaPrice(data.nftprice);
