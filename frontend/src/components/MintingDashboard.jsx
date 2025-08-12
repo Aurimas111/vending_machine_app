@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -15,7 +15,6 @@ import {
   FormControl,
   InputLabel,
   Chip,
-  Avatar,
   Grid,
   Paper,
   InputAdornment,
@@ -33,6 +32,8 @@ import {
   InfoOutlined as InfoIcon,
 } from "@mui/icons-material";
 import mintsService from "../services/mintsService";
+import LazyImage from "../components/misc/LazyImage";
+
 
 const MintingDashboard = ({walletAddress}) => {
   const theme = useTheme();
@@ -42,6 +43,7 @@ const MintingDashboard = ({walletAddress}) => {
   const [nfts, setNfts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tabValue, setTabValue] = useState("grid");
+
 
   // filter and sort the mints
   const filteredMints = nfts
@@ -73,6 +75,7 @@ const MintingDashboard = ({walletAddress}) => {
       }
       return 0;
     });
+
 
   // format date for display
   const formatDate = (dateValue) => {
@@ -300,8 +303,10 @@ const MintingDashboard = ({walletAddress}) => {
                 gap: 2
               }}
             >
+
               <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
                 Showing {filteredMints.length} of {nfts.length} NFTs
+                
               </Typography>
               <Box sx={{ display: 'flex', gap: 2 }}>
                 <Chip
@@ -403,16 +408,13 @@ const MintingDashboard = ({walletAddress}) => {
                           }}
                         >
                           <Box sx={{ position: "relative" }}>
-                            <Box
-                              component="img"
+                            <LazyImage
                               src={mint.image}
                               alt={mint.name}
                               sx={{
                                 width: "100%",
                                 height: 220,
                                 aspectRatio: "1/1",
-                                objectFit: "cover",
-                                bgcolor: "action.hover",
                               }}
                             />
                             <Chip
@@ -551,8 +553,8 @@ const MintingDashboard = ({walletAddress}) => {
                           }}
                         >
                           <Box sx={{ display: { xs: "none", md: "block" } }}>
-                            <Avatar 
-                              src={mint.image} 
+                            <LazyImage
+                              src={mint.image}
                               alt={mint.name}
                               sx={{ 
                                 width: 56, 
@@ -560,9 +562,7 @@ const MintingDashboard = ({walletAddress}) => {
                                 borderRadius: 2,
                                 border: `2px solid ${alpha(theme.palette.divider, 0.1)}`
                               }}
-                            >
-                              {mint.name.substring(0, 2)}
-                            </Avatar>
+                            />
                           </Box>
                           
                           <Typography sx={{ fontWeight: "bold", fontSize: '1rem' }}>
