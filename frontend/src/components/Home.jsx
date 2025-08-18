@@ -28,8 +28,8 @@ import {
 
 import Dashboard from "./Dashboard";
 import mintsService from "../services/mintsService";
-import * as Cardano from "@emurgo/cardano-serialization-lib-browser";
 import refundsService from "../services/refundsService";
+import walletService from "../services/walletService";
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState("configuration");
@@ -47,42 +47,19 @@ const Home = () => {
   };
 
 const connectWallet = async () => {
-
     try {
-      if (!window.cardano || !window.cardano.eternl) {
-        alert("Eternl Wallet not found. Please install it.");
-        return;
-      }
-
-      const api = await window.cardano.eternl.enable();
-      const usedAddresses = await api.getUsedAddresses(); // Hex format
-
-      if (usedAddresses.length === 0) {
-        alert("No used addresses found in wallet.");
-        return;
-      }
-
-      // Convert to Bech32 address
-      const raw = usedAddresses[0];
-      function hexToBytes(hex) {
-      return Uint8Array.from(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-      }
-
-      const address = Cardano.Address.from_bytes(hexToBytes(raw)).to_bech32();
-
+      const { address } = await walletService.connectWallet();
       setWalletAddress(address);
       setIsWalletConnected(true);
-      localStorage.setItem("wallet_connected", "true");
     } catch (err) {
-      console.error("Wallet connection failed", err);
-      alert("Failed to connect to Eternl wallet.");
+      alert(`Failed to connect to Eternl wallet: ${err.message}`);
     }
   };
 
   const disconnectWallet = () => {
+    walletService.disconnectWallet();
     setWalletAddress("");
     setIsWalletConnected(false);
-    localStorage.removeItem("wallet_connected");
   };
 
   useEffect(() => {
@@ -90,13 +67,16 @@ const connectWallet = async () => {
   const maxTries = 50; // Try for up to 5 seconds (50 * 100ms)
   
   function tryConnect() {
-    if (localStorage.getItem("wallet_connected") === "true") {
-      if (window.cardano && window.cardano.eternl) {
+     if (!walletService.isWalletConnected()) {
+      if (walletService.isWalletAvailable()) {
         connectWallet();
       } else if (tries < maxTries) {
         tries++;
         setTimeout(tryConnect, 100);
       }
+    }else{
+      setWalletAddress(walletService.getStoredAddress());
+      setIsWalletConnected(true);
     }
   }
   tryConnect();

@@ -49,8 +49,8 @@ const MintingDashboard = ({walletAddress}) => {
   const filteredMints = nfts
     .filter((mint) => {
       if (filter === "all") return true;
-      if (filter === "minted") return mint.status === "minted";
-      if (filter === "not minted") return mint.status === "not minted";
+      if (filter === "minted") return mint.status === "Minted";
+      if (filter === "not minted") return mint.status === "Not minted";
       return true;
     })
     .filter((mint) => {
