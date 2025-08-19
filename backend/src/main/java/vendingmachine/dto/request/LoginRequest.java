@@ -5,6 +5,9 @@ public class LoginRequest {
     private String key;
     private String signature;
 
+    public LoginRequest() {
+    }
+
     public LoginRequest(String address, String key, String signature) {
         this.address = address;
         this.key = key;

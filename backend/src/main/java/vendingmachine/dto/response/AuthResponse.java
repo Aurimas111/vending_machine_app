@@ -1,15 +1,19 @@
 package vendingmachine.dto.response;
 
+import vendingmachine.model.UserConfig;
+
 public class AuthResponse {
 
     private boolean success;
     private String token;
     private String message;
+    private UserConfig userConfig;
 
-    public AuthResponse(boolean success, String token, String message) {
+    public AuthResponse(boolean success, String token, String message, UserConfig userConfig) {
         this.success = success;
         this.token = token;
         this.message = message;
+        this.userConfig = userConfig;
     }
 
     public boolean isSuccess() {
@@ -34,5 +38,11 @@ public class AuthResponse {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+    public UserConfig getUserConfig() {
+        return userConfig;
+    }
+    public void setUserConfig(UserConfig userConfig) {
+        this.userConfig = userConfig;
     }
 }

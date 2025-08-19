@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import vendingmachine.dto.request.LoginRequest;
 import vendingmachine.dto.response.AuthResponse;
+import vendingmachine.model.UserConfig;
+import vendingmachine.utils.DbOperations;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -23,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AuthService {
 
     @Value("${vending.app.jwtSecret}")
-    private String SECRET_KEY;
+    private String secretKey;
 
     @Value("${vending.app.jwtExpiration}")
     private int jwtExpiration;
@@ -48,40 +50,46 @@ public class AuthService {
         try {
             String expectedNonce = getNonce(request.getAddress());
             if (expectedNonce == null) {
-                return new AuthResponse(false, null, "Invalid or expired nonce");
+                return new AuthResponse(false, null, "Invalid or expired nonce", null);
             }
 
             var verifier = new CIP30Verifier(request.getSignature(), request.getKey());
             var verificationResult = verifier.verify();
 
             if (!verificationResult.isValid()) {
-                return new AuthResponse(false, null, "Invalid signature");
+                return new AuthResponse(false, null, "Invalid signature", null);
             }
 
             String signedMessage = verificationResult.getMessage(MessageFormat.TEXT);
             if (!expectedNonce.equals(signedMessage)) {
-                return new AuthResponse(false, null, "Signed message doesn't match nonce");
+                return new AuthResponse(false, null, "Signed message doesn't match nonce", null);
             }
 
             String signedAddress = verificationResult.getAddress(AddressFormat.TEXT)
                     .orElseThrow(() -> new RuntimeException("No address found in signature"));
 
             if (!request.getAddress().equals(signedAddress)) {
-                return new AuthResponse(false, null, "Address mismatch");
+                return new AuthResponse(false, null, "Address mismatch", null);
             }
 
             clearNonce(request.getAddress());
             String token = generateJWT(request.getAddress());
 
-            return new AuthResponse(true, token, "Authentication successful");
+            UserConfig userConfig = DbOperations.getUserConfig(request.getAddress());
+            if (userConfig == null) {
+                userConfig = new UserConfig(request.getAddress(), 10, 5, 5, 0, 3);
+                DbOperations.insertConfig(userConfig);
+            }
+
+            return new AuthResponse(true, token, "Authentication successful", userConfig);
 
         } catch (Exception e) {
-            return new AuthResponse(false, null, "Authentication failed: " + e.getMessage());
+            return new AuthResponse(false, null, "Authentication failed: " + e.getMessage(), null);
         }
     }
 
     public String generateJWT(String address) {
-        SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+        SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
 
         return Jwts.builder()
                 .setSubject(address)

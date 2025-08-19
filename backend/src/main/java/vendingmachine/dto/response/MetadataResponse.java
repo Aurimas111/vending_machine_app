@@ -1,4 +1,4 @@
-package vendingmachine.model;
+package vendingmachine.dto.response;
 
 import java.util.Map;
 

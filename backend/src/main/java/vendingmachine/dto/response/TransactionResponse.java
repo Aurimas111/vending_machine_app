@@ -1,4 +1,6 @@
-package vendingmachine.model;
+package vendingmachine.dto.response;
+
+import vendingmachine.model.TransactionData;
 
 import java.util.ArrayList;
 
