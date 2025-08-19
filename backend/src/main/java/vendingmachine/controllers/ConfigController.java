@@ -1,5 +1,6 @@
 package vendingmachine.controllers;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import vendingmachine.model.UserConfig;
 import vendingmachine.services.ConfigService;
 import com.bloxbean.cardano.client.api.exception.ApiException;
@@ -22,9 +23,9 @@ public class ConfigController {
     }
 
     // get user config for users wallet address
-    @PostMapping("/getconfig")
-    public ResponseEntity<?> getConfig(@RequestBody String data) throws SQLException, CborSerializationException, ApiException {
-        UserConfig userConfig = configService.getConfig(data);
+    @GetMapping("/getconfig")
+    public ResponseEntity<?> getConfig(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException, ApiException {
+        UserConfig userConfig = configService.getConfig(wallet);
 
         if (userConfig != null) {
             return ResponseEntity.ok(userConfig);
@@ -34,10 +35,10 @@ public class ConfigController {
     }
 
     // delete user's policy
-    @PostMapping("/deletepolicy")
-    public ResponseEntity<?> deletePolicy(@RequestBody String data) throws SQLException, CborSerializationException, ApiException {
+    @DeleteMapping("/deletepolicy")
+    public ResponseEntity<?> deletePolicy(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException, ApiException {
         // if policy is deleted, metadata is deleted as well
-        Boolean deleted = configService.deletePolicy(data);
+        Boolean deleted = configService.deletePolicy(wallet);
 
         if(deleted){
             return ResponseEntity.ok("Policy deleted");
@@ -48,8 +49,8 @@ public class ConfigController {
 
     // create a new policy for the user
     @PostMapping("/createpolicy")
-    public ResponseEntity<?> createPolicy(@RequestBody String data) throws SQLException, CborSerializationException, ApiException {
-        Policy policy = configService.createPolicy(data);
+    public ResponseEntity<?> createPolicy(@AuthenticationPrincipal String wallet, @RequestBody String data) throws SQLException, CborSerializationException, ApiException {
+        Policy policy = configService.createPolicy(data, wallet);
         return ResponseEntity.ok(policy.getPolicyId());
     }
 
@@ -57,10 +58,10 @@ public class ConfigController {
     // metadata is a json list of NFTs with their attributes
     // metadata is stored in the database and associated with the user's policy id
     @PostMapping("/createmetadata")
-    public ResponseEntity<?> createMetadata(@RequestBody String data) throws SQLException, CborSerializationException, ApiException {
+    public ResponseEntity<?> createMetadata(@AuthenticationPrincipal String wallet, @RequestBody String data) throws SQLException, CborSerializationException, ApiException {
         // metadata is not editable
 
-        Boolean success = configService.createMetadata(data);
+        Boolean success = configService.createMetadata(data, wallet);
         if(!success){
             return ResponseEntity.badRequest().body("Invalid metadata format");
         }else {
@@ -69,10 +70,10 @@ public class ConfigController {
     }
 
     // delete metadata associated with user's policy
-    @PostMapping("/deletemetadata")
-    public ResponseEntity<?> deleteMetadata(@RequestBody String data) throws SQLException, CborSerializationException, ApiException {
+    @DeleteMapping("/deletemetadata")
+    public ResponseEntity<?> deleteMetadata(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException, ApiException {
 
-        Boolean success = configService.deleteMetadata(data);
+        Boolean success = configService.deleteMetadata(wallet);
 
         if(success){
             return ResponseEntity.ok("Metadata deleted");
@@ -83,10 +84,10 @@ public class ConfigController {
     }
 
     // set user's parameters for minting and refunds
-    @PostMapping("/setparameters")
-    public ResponseEntity<?> setParameters(@RequestBody String data) throws SQLException, CborSerializationException, ApiException {
+    @PutMapping("/setparameters")
+    public ResponseEntity<?> setParameters(@AuthenticationPrincipal String wallet, @RequestBody String data) throws SQLException, CborSerializationException, ApiException {
 
-        String message = configService.setParameters(data);
+        String message = configService.setParameters(data, wallet);
         return ResponseEntity.ok(message);
     }
 }

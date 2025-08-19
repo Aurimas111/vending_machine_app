@@ -24,8 +24,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -34,8 +32,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MintMultipleNfts extends Base {
-    private static Connection connection;
-    private static PreparedStatement statement;
     static ArrayList<TransactionData> mintTransactions = new ArrayList<>();
 
 

@@ -1,6 +1,7 @@
 package vendingmachine.model;
 
 import com.bloxbean.cardano.client.transaction.spec.Policy;
+import vendingmachine.dto.response.MetadataResponse;
 
 import java.util.ArrayList;
 
@@ -54,8 +55,16 @@ public class UserConfig {
         this.RefundsPerTxLimit = refundsPerTxLimit;
     }
 
-    public String getOwnerWalletAddress() {
+    public UserConfig(String address, int nftPrice, int nftsReservedPerTx, int nftsToMintPerTx, int nftsToNotMint, int refundsPerTxLimit){
+        this.ownerWalletAddress = address;
+        this.NFTPrice = nftPrice;
+        this.NFTsReservedPerTx = nftsReservedPerTx;
+        this.NFTsToMintPerTx = nftsToMintPerTx;
+        this.AmountOfNFTsNotToMint = nftsToNotMint;
+        this.RefundsPerTxLimit = refundsPerTxLimit;
+    }
 
+    public String getOwnerWalletAddress() {
         return ownerWalletAddress;
     }
 

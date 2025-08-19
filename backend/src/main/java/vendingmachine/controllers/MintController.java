@@ -1,10 +1,10 @@
 package vendingmachine.controllers;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import vendingmachine.model.NftMetadata;
 import vendingmachine.services.MintService;
 import vendingmachine.services.VendingMachineService;
 import com.bloxbean.cardano.client.exception.CborSerializationException;
-import org.json.JSONObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,28 +25,26 @@ public class MintController {
     }
 
     // get NFTs associated with the wallet address
-    @PostMapping("/getmints")
-    public ResponseEntity<?> getMints(@RequestBody String data) throws SQLException, CborSerializationException {
+    @GetMapping("/getmints")
+    public ResponseEntity<?> getMints(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException {
 
-        ArrayList<NftMetadata> metadata = mintService.getMints(data);
+        ArrayList<NftMetadata> metadata = mintService.getMints(wallet);
         return ResponseEntity.ok(metadata);
     }
 
     // start minting process for the wallet address
-    @PostMapping("/startmint")
-    public ResponseEntity<?> startMint(@RequestBody String data) throws SQLException, CborSerializationException {
+    @PutMapping("/startmint")
+    public ResponseEntity<?> startMint(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException {
 
-        JSONObject obj = new JSONObject(data);
-        vendingMachineService.startMinting(obj.getString("walletAddress"));
+        vendingMachineService.startMinting(wallet);
         return ResponseEntity.ok("Minting started");
     }
 
     // stop minting process for the wallet address
-    @PostMapping("/stopmint")
-    public ResponseEntity<?> stopMint(@RequestBody String data) throws SQLException, CborSerializationException {
+    @PutMapping("/stopmint")
+    public ResponseEntity<?> stopMint(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException {
 
-        JSONObject obj = new JSONObject(data);
-        vendingMachineService.stopMinting(obj.getString("walletAddress"));
+        vendingMachineService.stopMinting(wallet);
         return ResponseEntity.ok("Minting stopped");
     }
 }

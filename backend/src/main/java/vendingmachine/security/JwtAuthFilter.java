@@ -32,15 +32,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Validate JWT token
         JwtValidationResult result = jwtValidation.validateFromRequest(request);
 
         if (result.isValid()) {
             // Set authentication in security context
-            //CardanoUserDetails userDetails = new CardanoUserDetails(result.getAddress(), result.authMethod());
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(result.getUserConfig().getOwnerWalletAddress(), null, new ArrayList<>());
-            //new UsernamePasswordAuthenticationToken(result.getUserConfig().getOwner..., null, new ArrayList<>());
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } else {

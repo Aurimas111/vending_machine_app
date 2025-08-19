@@ -1,5 +1,6 @@
 package vendingmachine.utils;
 
+import vendingmachine.dto.response.MetadataResponse;
 import vendingmachine.model.*;
 import com.bloxbean.cardano.client.crypto.SecretKey;
 import com.bloxbean.cardano.client.crypto.VerificationKey;

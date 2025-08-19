@@ -1,8 +1,8 @@
 package vendingmachine.controllers;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import vendingmachine.services.VendingMachineService;
 import com.bloxbean.cardano.client.exception.CborSerializationException;
-import org.json.JSONObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,22 +20,18 @@ public class RefundController {
     }
 
     // start refunds for the wallet address
-    @PostMapping("/startrefunds")
-    public ResponseEntity<?> startRefunds(@RequestBody String data) throws SQLException, CborSerializationException {
+    @PutMapping("/startrefunds")
+    public ResponseEntity<?> startRefunds(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException {
 
-        JSONObject obj = new JSONObject(data);
-
-        vendingMachineService.startRefunding(obj.getString("walletAddress"));
+        vendingMachineService.startRefunding(wallet);
         return ResponseEntity.ok("Refunds started");
     }
 
     // stop refunds for the wallet address
-    @PostMapping("/stoprefunds")
-    public ResponseEntity<?> stopRefunds(@RequestBody String data) throws SQLException, CborSerializationException {
+    @PutMapping("/stoprefunds")
+    public ResponseEntity<?> stopRefunds(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException {
 
-        JSONObject obj = new JSONObject(data);
-
-        vendingMachineService.stopRefunding(obj.getString("walletAddress"));
+        vendingMachineService.stopRefunding(wallet);
         return ResponseEntity.ok("Refunds stopped");
     }
 }

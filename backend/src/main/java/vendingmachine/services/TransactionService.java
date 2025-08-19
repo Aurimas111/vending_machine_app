@@ -5,12 +5,10 @@ import com.bloxbean.cardano.client.api.exception.ApiException;
 import com.bloxbean.cardano.client.common.model.Networks;
 import com.bloxbean.cardano.client.exception.CborSerializationException;
 import com.bloxbean.cardano.client.transaction.spec.Policy;
-import org.json.JSONObject;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import vendingmachine.model.NftMetadata;
 import vendingmachine.model.TransactionData;
-import vendingmachine.model.TransactionResponse;
+import vendingmachine.dto.response.TransactionResponse;
 import vendingmachine.model.UserConfig;
 import vendingmachine.utils.Constant;
 import vendingmachine.utils.DbOperations;
@@ -22,9 +20,7 @@ import java.util.ArrayList;
 @Service
 public class TransactionService {
 
-    public TransactionResponse getTransactions(String data) throws CborSerializationException, SQLException, ApiException {
-        JSONObject obj = new JSONObject(data);
-        String address = obj.getString("address");
+    public TransactionResponse getTransactions(String address) throws CborSerializationException, SQLException, ApiException {
         Account account = new Account(Networks.preprod(), Constant.RECOVERY_PHRASE);
         Policy policy = DbOperations.getPolicyByWallet(address);
         UserConfig userConfig = DbOperations.getUserConfig(address);

@@ -1,6 +1,7 @@
 package vendingmachine.controllers;
 
-import vendingmachine.model.TransactionResponse;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import vendingmachine.dto.response.TransactionResponse;
 import vendingmachine.services.TransactionService;
 import com.bloxbean.cardano.client.api.exception.ApiException;
 import com.bloxbean.cardano.client.exception.CborSerializationException;
@@ -21,10 +22,10 @@ public class TransactionController {
 
      // get transactions received to minter address
      // returns a list of transactions with their status, metadata, amount minted, amount to mint, refund status, nft receiver wallet address
-     @PostMapping("/transactions")
-     public ResponseEntity<?> getTransactions(@RequestBody String data) throws SQLException, CborSerializationException, ApiException {
+     @GetMapping("/transactions")
+     public ResponseEntity<?> getTransactions(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException, ApiException {
 
-        TransactionResponse transactionResponse = transactionService.getTransactions(data);
+        TransactionResponse transactionResponse = transactionService.getTransactions(wallet);
         return ResponseEntity.ok(transactionResponse);
     }
 }
