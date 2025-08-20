@@ -361,8 +361,13 @@ public class DbOperations {
                     String insertSql = "INSERT INTO `userconfig`(`user_address`, `policy_id`, `policy_slot`, `collection_name`, `nft_price`, `collection_size`, `nft_reserved_per_tx`, `nft_to_mint_per_tx`, `amount_of_nft_not_to_mint`, `refund_per_tx_limit`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                     try (PreparedStatement insertStatement = connection.prepareStatement(insertSql)) {
                         insertStatement.setString(1, userConfig.getOwnerWalletAddress());
-                        insertStatement.setString(2, userConfig.getPolicy().getPolicyId());
-                        insertStatement.setString(3, userConfig.getPolicySlot());
+                        if (userConfig.getPolicy() == null) {
+                            insertStatement.setNull(2, Types.VARCHAR);
+                            insertStatement.setNull(3, Types.VARCHAR);
+                        } else {
+                            insertStatement.setString(2, userConfig.getPolicy().getPolicyId());
+                            insertStatement.setString(3, userConfig.getPolicySlot());
+                        }
                         insertStatement.setString(4, userConfig.getCollectionName());
                         insertStatement.setInt(5, userConfig.getNFTPrice());
                         insertStatement.setInt(6, userConfig.getCollectionSize());
@@ -371,6 +376,9 @@ public class DbOperations {
                         insertStatement.setInt(9, userConfig.getAmountOfNFTsNotToMint());
                         insertStatement.setInt(10, userConfig.getRefundsPerTxLimit());
                         insertStatement.executeUpdate();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        throw new RuntimeException(e);
                     }
                 }
             }

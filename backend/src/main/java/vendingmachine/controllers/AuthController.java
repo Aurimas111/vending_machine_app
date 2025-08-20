@@ -17,14 +17,12 @@ public class AuthController {
 
     @GetMapping("/nonce")
     public java.util.Map<String, String> getNonce(@RequestParam("address") String address) {
-        System.out.println(address);
         String nonce = authService.generateNonce(address);
         return java.util.Map.of("nonce", nonce);
     }
 
     @PostMapping("/login")
     public AuthResponse login(@RequestBody LoginRequest request) throws Exception {
-        System.out.println(request);
 
         return authService.authenticate(request);
     }

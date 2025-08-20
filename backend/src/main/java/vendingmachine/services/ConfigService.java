@@ -7,7 +7,6 @@ import com.bloxbean.cardano.client.exception.CborSerializationException;
 import com.bloxbean.cardano.client.transaction.spec.Policy;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import vendingmachine.model.NftMetadata;
 import vendingmachine.model.UserConfig;
