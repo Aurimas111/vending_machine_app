@@ -51,7 +51,7 @@ const fetchTransactions = async () => {
     setError(null);
 
   try {       
-    const response = await transactionsService.getTransactions({ address: walletAddress });
+    const response = await transactionsService.getTransactions();
     const data = response.data;
 
     // Sort transactions by blockTime

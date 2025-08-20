@@ -160,9 +160,9 @@ const connectWallet = async () => {
 
   try {
     if (checked) {
-      await mintsService.startMint({ walletAddress });
+      await mintsService.startMint();
     } else {
-      await mintsService.stopMint({ walletAddress });
+      await mintsService.stopMint();
     }
   } finally {
     setTimeout(() => setSwitchDisabled(false), 10000);
@@ -178,9 +178,9 @@ const handleRefundToggle = async (checked) => {
 
   try {
   if (checked) {
-    const res = await refundsService.startRefunds({ walletAddress });
+    const res = await refundsService.startRefunds();
   } else {
-    const res = await refundsService.stopRefunds({ walletAddress });
+    const res = await refundsService.stopRefunds();
   }
   } finally {
     setTimeout(() => setSwitchDisabled(false), 5000); // don't allow toggling for 5 seconds

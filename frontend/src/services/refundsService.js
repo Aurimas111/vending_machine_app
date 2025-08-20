@@ -4,12 +4,16 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://iamaurimas.xyz/api/mint
 
 class refundsService {
 
-
-    startRefunds(data){
-        return axios.post(API_URL + 'startrefunds', data)
+    getAuthHeaders() {
+        const token = localStorage.getItem('jwt');
+        return token ? { Authorization: `Bearer ${token}` } : {};
     }
-    stopRefunds(data){
-        return axios.post(API_URL + 'stoprefunds', data)
+
+    startRefunds(){
+        return axios.post(API_URL + 'startrefunds', {}, { headers: this.getAuthHeaders() })
+    }
+    stopRefunds(){
+        return axios.post(API_URL + 'stoprefunds', {}, { headers: this.getAuthHeaders() })
     }
 }
 

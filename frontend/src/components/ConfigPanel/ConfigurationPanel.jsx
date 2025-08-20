@@ -105,7 +105,7 @@ const ConfigurationPanel = ({
 
   const handleDeletePolicy = async () => {
     try {
-      await configService.deletePolicy({ address: walletAddress });
+      await configService.deletePolicy();
       reset({
       ...DEFAULT_FORM_VALUES,
       // preserve current parameter values
@@ -128,9 +128,9 @@ const ConfigurationPanel = ({
   useEffect(() => {
 
   if (!walletAddress) return;
-  
+
   setIsLoading(true);
-  configService.getConfig({ address: walletAddress })
+  configService.getConfig()
     .then(config => {
       if (config) {
           const metadataList = (config.data.metadataList || []).map(item => {
@@ -201,9 +201,10 @@ const ConfigurationPanel = ({
     });
 }, [walletAddress, reset]);
 
+
   const handleDeleteMetadata = async () => {
     try {
-      await configService.deleteMetadata({ address: walletAddress });
+      await configService.deleteMetadata();
           reset({
       ...DEFAULT_FORM_VALUES,
       collectionName: collectionNameValue,

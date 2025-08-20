@@ -1,6 +1,6 @@
 import * as Cardano from "@emurgo/cardano-serialization-lib-browser";
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://iamaurimas.xyz/api/minter/';
+const API_URL = import.meta.env.VITE_API_URL || 'https://iamaurimas.xyz/api/minter/auth';
 
 class WalletService {
 

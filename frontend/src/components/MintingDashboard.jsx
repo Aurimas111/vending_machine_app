@@ -105,7 +105,7 @@ const MintingDashboard = ({walletAddress}) => {
       didFetch = true;
       setLoading(true);
       try {
-        const response = await mintsService.getMints({ walletAddress });
+        const response = await mintsService.getMints();
         const fetchedNfts = response.data.map((item, index) => ({
           id: index.toString(),
           name: item.name,
