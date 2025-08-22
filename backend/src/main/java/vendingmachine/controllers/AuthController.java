@@ -6,7 +6,7 @@ import vendingmachine.dto.response.AuthResponse;
 import vendingmachine.services.AuthService;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/minter/auth")
 public class AuthController {
 
     private final AuthService authService;

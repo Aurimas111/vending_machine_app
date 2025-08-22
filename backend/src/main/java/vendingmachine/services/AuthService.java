@@ -78,7 +78,7 @@ public class AuthService {
             UserConfig userConfig = DbOperations.getUserConfig(request.getAddress());
 
             if (userConfig == null) {
-                userConfig = new UserConfig(request.getAddress(), 10, 5, 5, 0, 3);
+                userConfig = new UserConfig(request.getAddress(), 10000000, 5, 5, 0, 3);
                 DbOperations.insertConfig(userConfig);
             }
 

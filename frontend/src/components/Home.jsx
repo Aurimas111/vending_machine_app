@@ -293,7 +293,12 @@ const handleRefundToggle = async (checked) => {
                       fontWeight: 600
                     }}
                   >
-                    {walletAddress.slice(0, 8)}...{walletAddress.slice(-6)}
+                    {walletAddress ? (
+                      <>
+                        {walletAddress.slice(0, 8)}...{walletAddress.slice(-6)}
+                      </>
+                    ) : null}
+                    
                   </Typography>
                 </Paper>
               )}
