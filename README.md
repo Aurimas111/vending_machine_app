@@ -39,7 +39,7 @@ Live App: [NFT vending machine](https://iamaurimas.xyz/vendingmachine/)
 
 ## Features
 
-- Login via Eternl wallet (CIP-30 dApp connector)
+- Login via Eternl wallet (CIP-30 dApp connector) with JWT authentication. Users sign a nonce with their wallet, the backend verifies wallet ownership, and a JWT token is issued for secure API access
 - Create NFT collection policies with configurable locking periods
 - Upload metadata in JSON format, supporting a dynamic number of attributes
 - Upload NFT images to IPFS storage (via backend only)
