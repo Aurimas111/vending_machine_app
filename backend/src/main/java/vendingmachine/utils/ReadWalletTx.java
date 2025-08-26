@@ -16,10 +16,7 @@ import java.util.Objects;
 
 public class ReadWalletTx extends Base {
 
-
     public static void readTx(String mintingAddress, int mintPrice, int limitAmountPerTx, Policy policy) throws ApiException, SQLException, CborSerializationException {
-
-        new ReadWalletTx();
 
         // Read all transactions received to the minting address and save their txhash, blocktime, blockheight, txindex
         Result<List<AddressTransactionContent>> result;

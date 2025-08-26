@@ -85,7 +85,7 @@ public class AuthService {
             return new AuthResponse(true, token, "Authentication successful", userConfig);
 
         } catch (Exception e) {
-            return new AuthResponse(false, null, "Authentication failed: " + e.getMessage(), null);
+            return new AuthResponse(false, null, "Authentication failed", null);
         }
     }
 

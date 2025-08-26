@@ -31,9 +31,8 @@ public class Base {
     protected static ProtocolParamsSupplier protocolParamsSupplier;
     protected static AddressService addressService;
 
-    public Base() {
-        BackendService backendService =
-                new BFBackendService(Constants.BLOCKFROST_PREPROD_URL, Constant.BF_PROJECT_KEY);
+    static  {
+        backendService = new BFBackendService(Constants.BLOCKFROST_PREPROD_URL, Constant.BF_PROJECT_KEY);
 
         feeCalculationService = backendService.getFeeCalculationService();
         transactionHelperService = backendService.getTransactionHelperService();

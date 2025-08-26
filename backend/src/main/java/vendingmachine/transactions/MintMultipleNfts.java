@@ -116,9 +116,6 @@ public class MintMultipleNfts extends Base {
     // It also updates the database with the minted amounts and transaction details
     public static void mintNfts(Policy policy, ArrayList<NftMetadata> metadataNotMinted, String slot, Account sender, ArrayList<String> receivers, ArrayList<String> txHashes, ArrayList<Integer> amountToMint, int mintLimitPerTx) throws CborSerializationException, SQLException, ApiException, InterruptedException {
 
-        BackendService backendService =
-                new BFBackendService(Constants.BLOCKFROST_PREPROD_URL, Constant.BF_PROJECT_KEY);
-
         ArrayList<Asset> assets = new ArrayList<>();
 
         if(receivers.size()>=mintLimitPerTx) {

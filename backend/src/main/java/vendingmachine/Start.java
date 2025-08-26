@@ -33,8 +33,6 @@ public class Start extends Base {
         Just to upload images to ipfs storage and save ipfs hashes to database.
          */
 
-        new Start(); // to initialize data in base class
-
         Account sender = new Account(Networks.preprod(), Constant.RECOVERY_PHRASE);
         String mintingAddress = sender.baseAddress();
 
@@ -49,10 +47,8 @@ public class Start extends Base {
         if(metadataList.isEmpty()){
             System.out.println("Enter the directory of metadata.json file: ");
             String metadataDirectory = myObj.nextLine(); // folder in path must contain metadata.json
-            //C:/Users/aurim/OneDrive/Desktop/nft projektai/nft stuff/create-10k-nft-collection-2/build/json/_metadata.json
 
             metadataList = ReadMetadata.read(metadataDirectory);
-
             System.out.println(metadataList.get(0));
 
             ArrayList<String> ipfsUrl = ReadMetadata.uploadImages(metadataList);
@@ -62,7 +58,6 @@ public class Start extends Base {
             //Collections.shuffle(metadataList); // shuffle to not mint all NFTs in a row
 
             DbOperations.saveMetadata(metadataList, policy.getPolicyId());
-
         }
     }
     public static Policy createEpochPolicy(String name, long currentSlot, long epochs, Keys keys) {

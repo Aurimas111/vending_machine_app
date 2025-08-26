@@ -31,8 +31,8 @@ public class Refunds extends Base {
 
 
     public static void startRefund(Account sender, Policy policy, int refundReceiverLimit, AtomicBoolean stopFlag) throws SQLException, CborSerializationException, ApiException, InterruptedException {
+
         boolean refundsDone = false;
-        new Refunds();
 
         BackendService backendService =
                 new BFBackendService(Constants.BLOCKFROST_PREPROD_URL, Constant.BF_PROJECT_KEY);
