@@ -8,7 +8,7 @@ public class JwtValidationResult {
 
     private boolean valid;
     private UserConfig userConfig;
-    private java.time.Instant expiresAt;
+    private Instant expiresAt;
     private String errorMessage;
 
     public JwtValidationResult(boolean valid, UserConfig userConfig, Instant expiresAt, String errorMessage) {
@@ -48,5 +48,9 @@ public class JwtValidationResult {
 
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
+    }
+
+    public boolean isExpired() {
+        return expiresAt != null && Instant.now().isAfter(expiresAt);
     }
 }

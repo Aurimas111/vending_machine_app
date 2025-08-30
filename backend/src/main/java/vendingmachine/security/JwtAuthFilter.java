@@ -40,10 +40,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     new UsernamePasswordAuthenticationToken(result.getUserConfig().getOwnerWalletAddress(), null, new ArrayList<>());
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
-        } else {
+        } else if(result.isExpired()){
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Invalid or expired JWT");
-            return; // stop filter chain here
+            response.getWriter().write("Expired JWT");
+            return;
+        }else{
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Invalid JWT");
+            return;
         }
 
         filterChain.doFilter(request, response);

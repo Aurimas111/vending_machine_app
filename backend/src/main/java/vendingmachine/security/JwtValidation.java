@@ -10,6 +10,8 @@ import vendingmachine.utils.DbOperations;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.Date;
 
 @Service
 public class JwtValidation {
@@ -22,12 +24,14 @@ public class JwtValidation {
 
             SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
 
-            // Parse and validate the token
-            Claims claims = Jwts.parser()
+            Jws<Claims> jws = Jwts.parser()
                     .verifyWith(key)
                     .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
+                    .parseSignedClaims(token);
+
+            Claims claims = jws.getPayload();
+
+            Date exp = claims.getExpiration();
 
             String address = claims.get("address", String.class);
 
@@ -36,12 +40,14 @@ public class JwtValidation {
             return new JwtValidationResult(
                     true,
                     userConfig,
-                    claims.getExpiration().toInstant(),
+                    exp != null ? exp.toInstant() : null,
                     null
             );
 
         } catch (ExpiredJwtException e) {
-            return new JwtValidationResult(false, null, null, "Token expired");
+            Claims claims = e.getClaims();
+            Instant exp = claims.getExpiration() != null ? claims.getExpiration().toInstant() : null;
+            return new JwtValidationResult(false, null, exp, "Token expired");
         } catch (MalformedJwtException e) {
             return new JwtValidationResult(false, null, null, "Invalid token format");
         } catch (SignatureException e) {
