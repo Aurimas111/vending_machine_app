@@ -1,22 +1,17 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://iamaurimas.xyz/api/minter/';
+import apiClient from './apiClient';
 
 class mintsService {
 
-    getAuthHeaders() {
-        const token = localStorage.getItem('jwt');
-        return token ? { Authorization: `Bearer ${token}` } : {};
+    getMints(){
+        return apiClient.get('getmints');
     }
 
-    getMints(){
-        return axios.get(API_URL + 'getmints', { headers: this.getAuthHeaders() })
-    }
     startMint(){
-        return axios.post(API_URL + 'startmint', {}, { headers: this.getAuthHeaders() })
+        return apiClient.post('startmint');
     }
+
     stopMint(){
-        return axios.post(API_URL + 'stopmint', {}, { headers: this.getAuthHeaders() })
+        return apiClient.post('stopmint');
     }
 }
 

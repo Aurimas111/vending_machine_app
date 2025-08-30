@@ -1,32 +1,24 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://iamaurimas.xyz/api/minter/';
+import apiClient from './apiClient';
 
 class configService {
-
-    getAuthHeaders() {
-        const token = localStorage.getItem('jwt');
-        return token ? { Authorization: `Bearer ${token}` } : {};
-    }
-
     getConfig(){
-        return axios.get(API_URL + 'getconfig', { headers: this.getAuthHeaders() })
+        return apiClient.get('getconfig');
     }
     deletePolicy(){
-        return axios.delete(API_URL + 'deletepolicy', { headers: this.getAuthHeaders() })
+        return apiClient.delete('deletepolicy');
     }
     createPolicy(data){
-        return axios.post(API_URL + 'createpolicy', data, { headers: this.getAuthHeaders() })
+        return apiClient.post('createpolicy', data);
     }
     createMetadata(data){
-        return axios.post(API_URL + 'createmetadata', data, { headers: this.getAuthHeaders() })
+        return apiClient.post('createmetadata', data);
     }
     deleteMetadata(){
-        return axios.delete(API_URL + 'deletemetadata', { headers: this.getAuthHeaders() })
+        return apiClient.delete('deletemetadata');
     }
     setParameters(data){
-        return axios.put(API_URL + 'setparameters', data, { headers: this.getAuthHeaders() })
+        return apiClient.put('setparameters', data);
     }
 }
 
-export default new configService()
+export default new configService();
