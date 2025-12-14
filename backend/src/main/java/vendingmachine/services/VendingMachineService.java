@@ -1,5 +1,7 @@
 package vendingmachine.services;
 
+import vendingmachine.model.MintStatus;
+import vendingmachine.model.MintStatusMessage;
 import vendingmachine.model.Session;
 import vendingmachine.model.UserConfig;
 import vendingmachine.transactions.MintMultipleNfts;
@@ -21,6 +23,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public class VendingMachineService {
 
     private static final Map<String, Session> activeSessions = new ConcurrentHashMap<>();
+
+    private final MintStatusPublisher publisher;
+
+    public VendingMachineService(MintStatusPublisher publisher) {
+        this.publisher = publisher;
+    }
 
      // Initiates the NFT minting process for a specific user
      // Retrieves necessary configurations and policies, and starts a new thread to process the minting logic.
@@ -44,7 +52,8 @@ public class VendingMachineService {
         new Thread(() -> {
             try {
                 System.out.println("Calling minting logic for user: " + userAddress);
-                MintMultipleNfts.queue(sender, policy, slot, mintLimitPerTx, amountOfNftsNotToMint, session.getStopFlag());
+                publisher.send(policy.getPolicyId(), new MintStatusMessage(policy.getPolicyId(), MintStatus.STARTED, "", "Minting process started and being monitored"));
+                MintMultipleNfts.queue(sender, policy, slot, mintLimitPerTx, amountOfNftsNotToMint, session.getStopFlag(), publisher);
                 Thread.sleep(5000);
 
             } catch (CborSerializationException | SQLException | InterruptedException | ApiException e) {
