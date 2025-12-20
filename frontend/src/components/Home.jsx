@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import {
   DarkMode as MoonIcon,
   LightMode as SunIcon,
@@ -30,6 +30,7 @@ import Dashboard from "./Dashboard";
 import mintsService from "../services/mintsService";
 import refundsService from "../services/refundsService";
 import walletService from "../services/walletService";
+import socket from "../services/webSocketService";
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState("configuration");
@@ -40,6 +41,7 @@ const Home = () => {
   const [isVendingMachineActive, setIsVendingMachineActive] = useState(false);
   const [refundActive, setRefundActive] = useState(false);
   const [switchDisabled, setSwitchDisabled] = useState(false);
+  const [wsMessages, setWsMessages] = useState([]);
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
@@ -81,6 +83,27 @@ const connectWallet = async () => {
   }
   tryConnect();
   }, []);
+
+  useEffect(() => {
+      socket.onConnect = () => {
+      socket.subscribe(`/topic/vending-machine-status/${walletAddress}`, (msg) => {
+        const update = JSON.parse(msg.body);
+        setWsMessages(prev => [...prev.slice(-9), { // Keep last 10 messages
+          timestamp: new Date().toLocaleTimeString(),
+          data: update
+        }]);
+      });
+    };
+    
+    socket.activate();
+    
+      return () => {
+        if (socket.subscription) {
+          socket.subscription.unsubscribe();
+        }
+        socket.deactivate();
+      };
+    }, [walletAddress]);
 
 
   const theme = createTheme({
@@ -469,6 +492,97 @@ const handleRefundToggle = async (checked) => {
             </Box>
           </Container>
         </Box>
+
+        {/* WebSocket Messages Overlay */}
+        {wsMessages.length > 0 && (
+          <Paper
+            elevation={8}
+            sx={{
+              position: 'fixed',
+              bottom: 20,
+              right: 20,
+              width: 350,
+              maxHeight: 400,
+              overflow: 'auto',
+              p: 2,
+              bgcolor: alpha(theme.palette.background.paper, 0.95),
+              backdropFilter: 'blur(10px)',
+              border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+              borderRadius: 3,
+              zIndex: 1300,
+            }}
+          >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                Live transaction updates
+              </Typography>
+              <IconButton 
+                size="small" 
+                onClick={() => setWsMessages([])}
+                sx={{ color: 'text.secondary' }}
+              >
+                ×
+              </IconButton>
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              {wsMessages.map((msg, idx) => (
+                <Paper
+                  key={idx}
+                  elevation={0}
+                  sx={{
+                    p: 1.5,
+                    bgcolor: alpha(theme.palette.success.main, 0.1),
+                    border: `1px solid ${alpha(theme.palette.success.main, 0.3)}`,
+                    borderRadius: 2,
+                  }}
+                >
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                    {msg.timestamp}
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                    {msg.data.status && (
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: 600,
+                          color: 'text.primary',
+                        }}
+                      >
+                        Status: <span style={{ fontWeight: 400 }}>{msg.data.status}</span>
+                      </Typography>
+                    )}
+                    {msg.data.message && (
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: 'text.secondary',
+                        }}
+                      >
+                        {msg.data.message}
+                      </Typography>
+                    )}
+
+                    {msg.data.txHash && (
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: 'text.secondary',
+                          fontFamily: 'monospace',
+                          fontSize: '0.7rem',
+                          wordBreak: 'break-all',
+                          mt: 0.5,
+                        }}
+                      >
+                        {msg.data.txHash}
+                      </Typography>
+                    )}
+                    
+                  </Box>
+                </Paper>
+              ))}
+            </Box>
+          </Paper>
+        )}
       </Box>
     </ThemeProvider>
   );
