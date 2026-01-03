@@ -85,25 +85,36 @@ const connectWallet = async () => {
   }, []);
 
   useEffect(() => {
-      socket.onConnect = () => {
-      socket.subscribe(`/topic/vending-machine-status/${walletAddress}`, (msg) => {
+  if (localStorage.getItem("wallet_connected") !== "true") return;
+  if (!walletAddress) return;
+
+  socket.onConnect = () => {
+    const subscription = socket.subscribe(
+      `/topic/vending-machine-status/${walletAddress}`,
+      (msg) => {
+        console.log("WS message:", msg.body);
+
         const update = JSON.parse(msg.body);
-        setWsMessages(prev => [...prev.slice(-9), { // Keep last 10 messages
-          timestamp: new Date().toLocaleTimeString(),
-          data: update
-        }]);
-      });
-    };
-    
-    socket.activate();
-    
-      return () => {
-        if (socket.subscription) {
-          socket.subscription.unsubscribe();
-        }
-        socket.deactivate();
-      };
-    }, [walletAddress]);
+        setWsMessages(prev => [
+          ...prev.slice(-9), // keep last 10 messages
+          {
+            timestamp: new Date().toLocaleTimeString(),
+            data: update
+          }
+        ]);
+      }
+    );
+
+    socket.subscription = subscription;
+  };
+
+  socket.activate();
+
+  return () => {
+    socket.subscription?.unsubscribe();
+    socket.deactivate();
+  };
+}, [walletAddress]);
 
 
   const theme = createTheme({

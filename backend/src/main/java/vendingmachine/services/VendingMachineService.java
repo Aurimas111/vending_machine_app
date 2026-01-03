@@ -1,9 +1,6 @@
 package vendingmachine.services;
 
-import vendingmachine.model.MintStatus;
-import vendingmachine.model.MintStatusMessage;
-import vendingmachine.model.Session;
-import vendingmachine.model.UserConfig;
+import vendingmachine.model.*;
 import vendingmachine.transactions.MintMultipleNfts;
 import vendingmachine.transactions.Refunds;
 import vendingmachine.utils.Constant;
@@ -24,9 +21,9 @@ public class VendingMachineService {
 
     private static final Map<String, Session> activeSessions = new ConcurrentHashMap<>();
 
-    private final MintStatusPublisher publisher;
+    private final VendingMachineStatusPublisher publisher;
 
-    public VendingMachineService(MintStatusPublisher publisher) {
+    public VendingMachineService(VendingMachineStatusPublisher publisher) {
         this.publisher = publisher;
     }
 
@@ -52,8 +49,8 @@ public class VendingMachineService {
         new Thread(() -> {
             try {
                 System.out.println("Calling minting logic for user: " + userAddress);
-                publisher.send(policy.getPolicyId(), new MintStatusMessage(policy.getPolicyId(), MintStatus.STARTED, "", "Minting process started and being monitored"));
-                MintMultipleNfts.queue(sender, policy, slot, mintLimitPerTx, amountOfNftsNotToMint, session.getStopFlag(), publisher);
+                publisher.send(userConfig.getOwnerWalletAddress(), new MintStatusMessage(policy.getPolicyId(), MintStatus.STARTED, "", "Minting process started and being monitored"));
+                MintMultipleNfts.queue(sender, policy, slot, mintLimitPerTx, amountOfNftsNotToMint, session.getStopFlag(), publisher, userConfig.getOwnerWalletAddress());
                 Thread.sleep(5000);
 
             } catch (CborSerializationException | SQLException | InterruptedException | ApiException e) {
@@ -97,8 +94,10 @@ public class VendingMachineService {
 
         new Thread(() -> {
             try {
+                publisher.send(userConfig.getOwnerWalletAddress(), new RefundStatusMessage(policy.getPolicyId(), RefundStatus.INITIATED, "", "Refund process started and being monitored"));
+
                 System.out.println("Calling refund logic for user: " + userAddress);
-                Refunds.startRefund(account, policy, amountOfRefundsPerTx, session.getStopFlag());
+                Refunds.startRefund(account, policy, amountOfRefundsPerTx, session.getStopFlag(), publisher, userConfig.getOwnerWalletAddress());
                 Thread.sleep(5000);
 
             } catch (CborSerializationException | SQLException | InterruptedException | ApiException e) {
@@ -109,7 +108,6 @@ public class VendingMachineService {
                 System.out.println("Stopped refund loop for user: " + userAddress);
             }
         }).start();
-
     }
 
     // Stops the refunding process for a specific user by setting the stop flag in the session

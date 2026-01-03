@@ -1,7 +1,7 @@
 package vendingmachine.transactions;
 
 import vendingmachine.model.*;
-import vendingmachine.services.MintStatusPublisher;
+import vendingmachine.services.VendingMachineStatusPublisher;
 import vendingmachine.utils.Base;
 import vendingmachine.utils.DbOperations;
 import vendingmachine.utils.ReadWalletTx;
@@ -35,7 +35,7 @@ public class MintMultipleNfts extends Base {
     // It checks the number of NFTs already minted and continues minting until the limit is reached or stopped externally
     // It handles the minting process in batches defined by mintLimitPerTx
     // It also manages the metadata and transaction data for each minting operation
-    public static void queue(Account sender, Policy policy, String slot, int mintLimitPerTx, int amountOfNftsNotToMint, AtomicBoolean stopFlag, MintStatusPublisher publisher) throws SQLException, CborSerializationException, InterruptedException, ApiException {
+    public static void queue(Account sender, Policy policy, String slot, int mintLimitPerTx, int amountOfNftsNotToMint, AtomicBoolean stopFlag, VendingMachineStatusPublisher publisher, String ownerWalletAddress) throws SQLException, CborSerializationException, InterruptedException, ApiException {
 
         ArrayList<NftMetadata> metadataNotMinted = new ArrayList<>();
         ArrayList<String> txHashNotMinted = new ArrayList<>();
@@ -50,7 +50,7 @@ public class MintMultipleNfts extends Base {
         if(mintCounter <= collectionSize - amountOfNftsNotToMint) {
                 while(!stopFlag.get()){
                     System.out.printf("trying to mint %d NFTs\n", mintLimitPerTx);
-                    publisher.send(policy.getPolicyId(),  new MintStatusMessage(policy.getPolicyId(), MintStatus.STARTED, "", "Trying to mint "+ mintLimitPerTx + " NFTs"));
+                    publisher.send(ownerWalletAddress,  new MintStatusMessage(policy.getPolicyId(), MintStatus.STARTED, "", "Trying to mint "+ mintLimitPerTx + " NFTs"));
                     mintTransactions.clear();
                     notMintedAddress.clear();
                     txHashNotMinted.clear();
@@ -96,7 +96,7 @@ public class MintMultipleNfts extends Base {
 
                     // loop until we have enough addresses
                     if(notMintedAddress.size()==mintLimitPerTx) {
-                       mintNfts(policy, metadataNotMinted, slot, sender, notMintedAddress, txHashNotMinted, amountsToMint, mintLimitPerTx, publisher);
+                       mintNfts(policy, metadataNotMinted, slot, sender, notMintedAddress, txHashNotMinted, amountsToMint, mintLimitPerTx, publisher, ownerWalletAddress);
 
                         System.out.println("sleeping for 10 seconds");
                         TimeUnit.SECONDS.sleep(10);
@@ -111,7 +111,7 @@ public class MintMultipleNfts extends Base {
     // This method mints NFTs based on the provided policy, metadata, slot, sender account, receivers, transaction hashes, and amounts to mint
     // It creates a transaction for minting the NFTs and attaches the metadata
     // It also updates the database with the minted amounts and transaction details
-    public static void mintNfts(Policy policy, ArrayList<NftMetadata> metadataNotMinted, String slot, Account sender, ArrayList<String> receivers, ArrayList<String> txHashes, ArrayList<Integer> amountToMint, int mintLimitPerTx, MintStatusPublisher publisher) throws CborSerializationException, SQLException, ApiException, InterruptedException {
+    public static void mintNfts(Policy policy, ArrayList<NftMetadata> metadataNotMinted, String slot, Account sender, ArrayList<String> receivers, ArrayList<String> txHashes, ArrayList<Integer> amountToMint, int mintLimitPerTx, VendingMachineStatusPublisher publisher, String ownerWalletAddress) throws CborSerializationException, SQLException, ApiException, InterruptedException {
 
         ArrayList<Asset> assets = new ArrayList<>();
 
@@ -156,11 +156,15 @@ public class MintMultipleNfts extends Base {
                     .withSigner(SignerProviders.signerFrom(policy))
                     .validTo(ttl)  // policy is going to lock at the saved slot
                     .completeAndWait(System.out::println);
-            publisher.send(policy.getPolicyId(), new MintStatusMessage(policy.getPolicyId(), MintStatus.SUBMITTED, result.getValue(), "Transaction submitted to Cardano network"));
-
 
             if (result.isSuccessful()) {
                 System.out.println("Transaction Id: " + result.getValue());
+                publisher.send(ownerWalletAddress, new MintStatusMessage(
+                        policy.getPolicyId(),
+                        MintStatus.MINTED,
+                        result.getValue(),
+                        "Transaction confirmed on Cardano network"
+                ));
 
                 // update minted amount and amount to mint in db
                 int mintedSoFar = 0;
@@ -181,16 +185,10 @@ public class MintMultipleNfts extends Base {
                 // Mark all NFTs as minted in the database and save tx hash with block time for frontend display
                 for (int i = 0; i < receivers.size(); i++) {
                     DbOperations.updateMetadataMinted(metadataNotMinted.get(i).getName(), policy.getPolicyId(), result.getValue(), blockTime, receivers.get(i));
-                    publisher.send(policy.getPolicyId(), new MintStatusMessage(
-                            policy.getPolicyId(),
-                            MintStatus.MINTED,
-                            result.getValue(),
-                            "Transaction confirmed on Cardano network"
-                    ));
                 }
             } else {
                 System.out.println("Transaction failed: " + result);
-                publisher.send(policy.getPolicyId(), new MintStatusMessage(
+                publisher.send(ownerWalletAddress, new MintStatusMessage(
                         policy.getPolicyId(),
                         MintStatus.FAILED,
                         "",
