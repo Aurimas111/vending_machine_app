@@ -1,9 +1,9 @@
 package vendingmachine.model;
 
-public enum MintStatus {
-    STARTED,
+public enum RefundStatus {
+    INITIATED,
     SUBMITTED,
-    MINTED,
+    COMPLETED,
     FAILED,
     STOPPED
 }

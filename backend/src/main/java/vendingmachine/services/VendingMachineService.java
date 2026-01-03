@@ -59,16 +59,24 @@ public class VendingMachineService {
             } finally {
                 activeSessions.remove(userAddress);
                 System.out.println("Stopped minting loop for user: " + userAddress);
+                try {
+                    publisher.send(userConfig.getOwnerWalletAddress(), new MintStatusMessage(policy.getPolicyId(), MintStatus.STOPPED, "", "Minting has been stopped"));
+                } catch (CborSerializationException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }).start();
     }
 
     // Stops the minting process for a specific user by setting the stop flag in the session
-    public void stopMinting(String userAddress) {
+    public void stopMinting(String userAddress) throws SQLException, CborSerializationException {
         Session session = activeSessions.get(userAddress);
+        UserConfig userConfig = DbOperations.getUserConfig(userAddress);
+        Policy policy = DbOperations.getPolicyByWallet(userAddress);
         if (session != null) {
             session.stop();
             System.out.println("Requested stop of minting for user: " + userAddress);
+            publisher.send(userConfig.getOwnerWalletAddress(), new MintStatusMessage(policy.getPolicyId(), MintStatus.STARTED, "", "Minting will be stopped after the last submitted transaction is confirmed"));
         } else {
             System.out.println("No active minting session found for user: " + userAddress);
         }
@@ -77,7 +85,6 @@ public class VendingMachineService {
     // Initiates the refunding process for a specific user
     // Retrieves necessary configurations and policies, and starts a new thread to process the refunding logic.
     public void startRefunding(String userAddress) throws SQLException, CborSerializationException {
-
         if (activeSessions.containsKey(userAddress)) {
             System.out.println("Refunding already in progress for user: " + userAddress);
             return;
@@ -106,16 +113,24 @@ public class VendingMachineService {
             } finally {
                 activeSessions.remove(userAddress);
                 System.out.println("Stopped refund loop for user: " + userAddress);
+                try {
+                    publisher.send(userConfig.getOwnerWalletAddress(), new RefundStatusMessage(policy.getPolicyId(), RefundStatus.STOPPED, "", "Refund process has been stopped"));
+                } catch (CborSerializationException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }).start();
     }
 
     // Stops the refunding process for a specific user by setting the stop flag in the session
-    public void stopRefunding(String userAddress){
+    public void stopRefunding(String userAddress) throws SQLException, CborSerializationException {
+        UserConfig userConfig = DbOperations.getUserConfig(userAddress);
+        Policy policy = DbOperations.getPolicyByWallet(userAddress);
         Session session = activeSessions.get(userAddress);
         if (session != null) {
             session.stop();
             System.out.println("Requested stop of refunds for user: " + userAddress);
+        publisher.send(userConfig.getOwnerWalletAddress(), new RefundStatusMessage(policy.getPolicyId(), RefundStatus.STOPPED, "", "Refund process has been stopped"));
         } else {
             System.out.println("No active refunding session found for user: " + userAddress);
         }
