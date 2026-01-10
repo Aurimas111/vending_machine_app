@@ -24,7 +24,6 @@ import java.util.Map;
 public class ConfigService extends Base {
 
     public UserConfig getConfig(String address) throws SQLException, CborSerializationException {
-
         return DbOperations.getUserConfig(address);
     }
 

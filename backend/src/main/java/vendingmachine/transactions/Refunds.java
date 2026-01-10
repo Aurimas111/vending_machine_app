@@ -1,5 +1,8 @@
 package vendingmachine.transactions;
 
+import vendingmachine.model.RefundStatus;
+import vendingmachine.model.RefundStatusMessage;
+import vendingmachine.services.VendingMachineStatusPublisher;
 import vendingmachine.utils.Base;
 import vendingmachine.utils.Constant;
 import vendingmachine.utils.DbOperations;
@@ -30,7 +33,7 @@ public class Refunds extends Base {
     static ArrayList<String> txHashes = new ArrayList<>();
 
 
-    public static void startRefund(Account sender, Policy policy, int refundReceiverLimit, AtomicBoolean stopFlag) throws SQLException, CborSerializationException, ApiException, InterruptedException {
+    public static void startRefund(Account sender, Policy policy, int refundReceiverLimit, AtomicBoolean stopFlag, VendingMachineStatusPublisher publisher, String ownerWalletAddress) throws SQLException, CborSerializationException, ApiException, InterruptedException {
 
         boolean refundsDone = false;
 
@@ -56,7 +59,6 @@ public class Refunds extends Base {
 
                 Tx tx = new Tx();
                 for (int i = 0; i < refundAddresses.size(); i++) {
-
                     tx.payToAddress(refundAddresses.get(i), Amount.ada((refundAmounts.get(i) / 1000000) - 0.2));
                 }
 
@@ -70,6 +72,12 @@ public class Refunds extends Base {
                         .completeAndWait(System.out::println);
 
                 if (result.isSuccessful()) {
+                    publisher.send(ownerWalletAddress, new RefundStatusMessage(
+                            policy.getPolicyId(),
+                            RefundStatus.COMPLETED,
+                            result.getValue(),
+                            "Refund confirmed on Cardano network"
+                    ));
                     // update db with refunded information and read more txs for refunds
                     DbOperations.updateRefundedTxs(policy, txHashes);
                     refundAddresses.clear();
@@ -85,6 +93,12 @@ public class Refunds extends Base {
 
 
                 } else {
+                    publisher.send(ownerWalletAddress, new RefundStatusMessage(
+                            policy.getPolicyId(),
+                            RefundStatus.FAILED,
+                            result.getValue(),
+                            "Refund Failed"
+                    ));
                     System.out.println("Transaction failed: " + result);
                 }
             }

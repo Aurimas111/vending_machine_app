@@ -42,7 +42,7 @@ public class MintController {
 
     // stop minting process for the wallet address
     @PostMapping("/stopmint")
-    public ResponseEntity<?> stopMint(@AuthenticationPrincipal String wallet) {
+    public ResponseEntity<?> stopMint(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException {
 
         vendingMachineService.stopMinting(wallet);
         return ResponseEntity.ok("Minting stopped");
