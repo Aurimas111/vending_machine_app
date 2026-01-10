@@ -1,24 +1,42 @@
 package vendingmachine.model;
 
 import com.bloxbean.cardano.client.transaction.spec.Policy;
+import jakarta.persistence.*;
 import vendingmachine.dto.response.MetadataResponse;
 
 import java.util.ArrayList;
 
+@Entity
+@Table(name = "userconfig")
 public class UserConfig {
 
+    @Id
+    private Integer id;
+    @Column(name = "user_address")
     private String ownerWalletAddress;
+    @Transient
     private Policy policy;
+    @Column(name = "policy_slot")
     private String policySlot;
+    @Transient
     private ArrayList<MetadataResponse> metadataList;
+    @Column(name = "collection_name")
     private String collectionName;
+    @Column(name = "nft_price")
     private int NFTPrice;
+    @Column(name = "collection_size")
     private int collectionSize;
+    @Column(name = "nft_reserved_per_tx")
     private int NFTsReservedPerTx;
+    @Column(name = "nft_to_mint_per_tx")
     private int NFTsToMintPerTx;
+    @Column(name = "amount_of_nft_not_to_mint")
     private int AmountOfNFTsNotToMint;
+    @Column(name = "refund_per_tx_limit")
     private int RefundsPerTxLimit;
 
+    public UserConfig() {
+    }
 
     public UserConfig(String ownerWalletAddress, Policy policy, String policySlot, ArrayList<MetadataResponse> metadataList, String collectionName, int NFTPrice, int collectionSize, int NFTsReservedPerTx, int NFTsToMintPerTx, int amountOfNFTsNotToMint, int refundsPerTxLimit) {
         this.ownerWalletAddress = ownerWalletAddress;

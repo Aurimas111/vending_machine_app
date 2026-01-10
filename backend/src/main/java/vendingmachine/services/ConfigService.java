@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import vendingmachine.model.NftMetadata;
 import vendingmachine.model.UserConfig;
+import vendingmachine.repository.UserConfigRepository;
 import vendingmachine.utils.Base;
 import vendingmachine.utils.DbOperations;
 import vendingmachine.utils.ReadMetadata;
@@ -23,8 +24,14 @@ import java.util.Map;
 @Service
 public class ConfigService extends Base {
 
+    private UserConfigRepository userConfigRepository;
+
+    public ConfigService(UserConfigRepository userConfigRepository) {
+        this.userConfigRepository = userConfigRepository;
+    }
+
     public UserConfig getConfig(String address) throws SQLException, CborSerializationException {
-        return DbOperations.getUserConfig(address);
+        return userConfigRepository.findByOwnerWalletAddress(address);
     }
 
     public Boolean deletePolicy(String address) throws SQLException, CborSerializationException {
