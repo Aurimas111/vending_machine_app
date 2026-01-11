@@ -20,10 +20,16 @@ import java.util.ArrayList;
 @Service
 public class TransactionService {
 
+    private DbOperations dbOperations;
+
+    public TransactionService(DbOperations dbOperations) {
+        this.dbOperations = dbOperations;
+    }
+
     public TransactionResponse getTransactions(String address) throws CborSerializationException, SQLException, ApiException {
         Account account = new Account(Networks.preprod(), Constant.RECOVERY_PHRASE);
-        Policy policy = DbOperations.getPolicyByWallet(address);
-        UserConfig userConfig = DbOperations.getUserConfig(address);
+        Policy policy = dbOperations.getPolicyByWallet(address);
+        UserConfig userConfig = dbOperations.getUserConfig(address);
 
         ReadWalletTx.readTx(account.baseAddress(), userConfig.getNFTPrice(), userConfig.getNFTsReservedPerTx(), policy);
 

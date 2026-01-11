@@ -25,9 +25,11 @@ import java.util.Map;
 public class ConfigService extends Base {
 
     private UserConfigRepository userConfigRepository;
+    private DbOperations dbOperations;
 
-    public ConfigService(UserConfigRepository userConfigRepository) {
+    public ConfigService(UserConfigRepository userConfigRepository, DbOperations dbOperations) {
         this.userConfigRepository = userConfigRepository;
+        this.dbOperations = dbOperations;
     }
 
     public UserConfig getConfig(String address) throws SQLException, CborSerializationException {
@@ -35,7 +37,7 @@ public class ConfigService extends Base {
     }
 
     public Boolean deletePolicy(String address) throws SQLException, CborSerializationException {
-        Policy policy = DbOperations.getPolicyByWallet(address);
+        Policy policy = dbOperations.getPolicyByWallet(address);
 
         if(DbOperations.deletePolicy(address) && DbOperations.deleteMetadata(policy.getPolicyId())){
             return true;
@@ -48,7 +50,7 @@ public class ConfigService extends Base {
 
         // Check if UserConfig exists, if not, create a new one with default values
         JSONObject obj = new JSONObject(data);
-        UserConfig userConfig = DbOperations.getUserConfig(address);
+        UserConfig userConfig = dbOperations.getUserConfig(address);
         String collectionName = obj.getString("collectionName");
 
         if (userConfig == null) {
@@ -85,7 +87,7 @@ public class ConfigService extends Base {
         JSONObject obj = new JSONObject(data);
         JSONArray metadataJsonArray = obj.getJSONArray("metadata");
         ArrayList<NftMetadata> metadataList = new ArrayList<>();
-        Policy policy = DbOperations.getPolicyByWallet(address);
+        Policy policy = dbOperations.getPolicyByWallet(address);
 
         for (int i = 0; i < metadataJsonArray.length(); i++) {
             JSONObject nftJson = metadataJsonArray.getJSONObject(i);
@@ -115,7 +117,7 @@ public class ConfigService extends Base {
     }
 
     public Boolean deleteMetadata(String address) throws SQLException, CborSerializationException {
-        Policy policy = DbOperations.getPolicyByWallet(address);
+        Policy policy = dbOperations.getPolicyByWallet(address);
 
         if(DbOperations.deleteMetadata(policy.getPolicyId())){
             return true;
@@ -129,9 +131,9 @@ public class ConfigService extends Base {
         JSONObject obj = new JSONObject(data);
 
         // Check if UserConfig exists
-        UserConfig userConfig = DbOperations.getUserConfig(address);
+        UserConfig userConfig = dbOperations.getUserConfig(address);
         Policy policy = null;
-        policy = DbOperations.getPolicyByWallet(address);
+        policy = dbOperations.getPolicyByWallet(address);
 
         if (userConfig == null) {
             userConfig = new UserConfig(

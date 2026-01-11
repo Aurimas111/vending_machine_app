@@ -19,6 +19,12 @@ public class JwtValidation {
     @Value("${vending.app.jwtSecret}")
     private String jwtSecret;
 
+    private DbOperations dbOperations;
+
+    public JwtValidation(DbOperations dbOperations) {
+        this.dbOperations = dbOperations;
+    }
+
     public JwtValidationResult validateToken(String token) {
         try {
 
@@ -35,7 +41,7 @@ public class JwtValidation {
 
             String address = claims.get("address", String.class);
 
-            UserConfig userConfig = DbOperations.getUserConfig(address);
+            UserConfig userConfig = dbOperations.getUserConfig(address);
 
             return new JwtValidationResult(
                     true,

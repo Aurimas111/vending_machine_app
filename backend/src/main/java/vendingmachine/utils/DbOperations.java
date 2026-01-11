@@ -1,5 +1,8 @@
 package vendingmachine.utils;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.springframework.stereotype.Component;
 import vendingmachine.dto.response.MetadataResponse;
 import vendingmachine.model.*;
 import com.bloxbean.cardano.client.crypto.SecretKey;
@@ -9,14 +12,21 @@ import com.bloxbean.cardano.client.transaction.spec.Policy;
 import com.bloxbean.cardano.client.transaction.spec.script.RequireTimeBefore;
 import com.bloxbean.cardano.client.transaction.spec.script.ScriptAll;
 import com.bloxbean.cardano.client.transaction.spec.script.ScriptPubkey;
+import vendingmachine.repository.PolicyRepository;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-
+@Component
 public class DbOperations {
+
+    private PolicyRepository policyRepository;
+
+    public DbOperations(PolicyRepository policyRepository) {
+        this.policyRepository = policyRepository;
+    }
 
     public static Connection connectToDb() {
 
@@ -181,44 +191,28 @@ public class DbOperations {
         }
     }
 
-    public static Policy getPolicyByWallet(String walletAddress) throws SQLException {
-        Policy policy = null;
+    public Policy getPolicyByWallet(String walletAddress) throws SQLException {
         String slot = null;
-        String vkey = null;
-        String skey = null;
-        String name = null;
-        String sql = "SELECT * FROM `policy` WHERE `ownerWallet` = ?";
 
-        try (Connection connection = connectToDb();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        PolicyObject policyObject = policyRepository.findByOwnerWallet(walletAddress);
 
-            statement.setString(1, walletAddress);
-            try (ResultSet rs = statement.executeQuery()) {
-                while (rs.next()) {
-                    String script = rs.getString("PolicyScript");
-                    slot = script.substring(script.indexOf("slot=")+5, script.indexOf("),"));
-                    vkey = rs.getString("verificationKey");
-                    skey = rs.getString("signingKey");
-                    name = rs.getString("name");
-                }
-            }
-        }
-
-        if (vkey == null || skey == null) {
-            return policy;
+        String script = policyObject.getPolicyScript();
+        slot = script.substring(script.indexOf("slot=") + 5, script.indexOf("),"));
+        if (policyObject.getVerificationKey() == null || policyObject.getSigningKey() == null) {
+            return null;
         }
 
         RequireTimeBefore requireTimeBefore = new RequireTimeBefore(Long.parseLong(slot));
         VerificationKey verificationKey = new VerificationKey();
-        verificationKey.setCborHex(vkey);
+        verificationKey.setCborHex(policyObject.getVerificationKey());
 
         ScriptPubkey scriptPubkey = ScriptPubkey.create(verificationKey);
         ScriptAll scriptAll = new ScriptAll().addScript(requireTimeBefore).addScript(scriptPubkey);
 
         SecretKey secretKey = new SecretKey();
-        secretKey.setCborHex(skey);
+        secretKey.setCborHex(policyObject.getSigningKey());
 
-        return new Policy(name, scriptAll).addKey(secretKey);
+        return new Policy(policyObject.getName(), scriptAll).addKey(secretKey);
     }
 
     public static void saveMetadata(ArrayList<NftMetadata> metadataList, String policy) throws SQLException {
@@ -275,7 +269,7 @@ public class DbOperations {
     public static Map<String, String> parseJsonToMap(String jsonStr) {
         Map<String, String> map = new HashMap<>();
         try {
-            org.json.simple.JSONObject jsonObject = (org.json.simple.JSONObject) new org.json.simple.parser.JSONParser().parse(jsonStr);
+            JSONObject jsonObject = (JSONObject) new JSONParser().parse(jsonStr);
             for (Object key : jsonObject.keySet()) {
                 map.put((String) key, (String) jsonObject.get(key));
             }
@@ -385,7 +379,7 @@ public class DbOperations {
         }
     }
 
-    public static UserConfig getUserConfig(String address) throws SQLException, CborSerializationException {
+    public UserConfig getUserConfig(String address) throws SQLException, CborSerializationException {
         UserConfig userConfig = null;
         ArrayList<MetadataResponse> metadataList = new ArrayList<>();
         Policy policy = null;

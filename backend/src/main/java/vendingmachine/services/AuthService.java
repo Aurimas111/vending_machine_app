@@ -32,6 +32,12 @@ public class AuthService {
 
     private final Map<String, String> nonces = new ConcurrentHashMap<>();
 
+    private DbOperations dbOperations;
+
+    public AuthService(DbOperations dbOperations) {
+        this.dbOperations = dbOperations;
+    }
+
     public String generateNonce(String address) {
         String nonce = UUID.randomUUID().toString();
         nonces.put(address, nonce);
@@ -47,6 +53,7 @@ public class AuthService {
     }
 
     public AuthResponse authenticate(LoginRequest request) {
+
         try {
             String expectedNonce = getNonce(request.getAddress());
             if (expectedNonce == null) {
@@ -75,7 +82,7 @@ public class AuthService {
             clearNonce(request.getAddress());
             String token = generateJWT(request.getAddress());
 
-            UserConfig userConfig = DbOperations.getUserConfig(request.getAddress());
+            UserConfig userConfig = dbOperations.getUserConfig(request.getAddress());
 
             if (userConfig == null) {
                 userConfig = new UserConfig(request.getAddress(), 10000000, 5, 5, 0, 3);
