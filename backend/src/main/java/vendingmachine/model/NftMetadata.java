@@ -1,17 +1,39 @@
 package vendingmachine.model;
 
-import java.util.Map;
-public class NftMetadata {
+import jakarta.persistence.*;
 
+import java.util.Map;
+
+@Entity
+@Table(name = "metadata")
+public class NftMetadata {
+    @Id
+    private Integer id;
+    @Column(name = "name")
     private String name;
+    @Column(name = "file_url")
     private String file_url;
+    @Column(name = "image")
     private String image;
+    @Column(name = "ipfs_hash")
     private String ipfsHash;
+    @Column(name = "is_minted")
     private boolean isMinted;
+    @Transient
     private Map<String, String> dynamicAttributes;
+    @Column(name = "attributes")
+    private String attributes;
+    @Column(name = "tx_hash")
     private String txHash;
+    @Column(name = "mint_blocktime")
     private int timeStamp;
+    @Column(name = "receiver")
     private String receiverAddress;
+    @Column(name = "policy_id")
+    private String policyId;
+
+    public NftMetadata() {
+    }
 
     public NftMetadata(String name, String file_url, String image, String ipfsHash, boolean isMinted, Map<String, String> dynamicAttributes) {
         this.name = name;
