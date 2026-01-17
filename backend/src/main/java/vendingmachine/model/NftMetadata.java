@@ -26,7 +26,7 @@ public class NftMetadata {
     @Column(name = "tx_hash")
     private String txHash;
     @Column(name = "mint_blocktime")
-    private int timeStamp;
+    private Integer timeStamp;
     @Column(name = "receiver")
     private String receiverAddress;
     @Column(name = "policy_id")
@@ -80,10 +80,35 @@ public class NftMetadata {
         this.dynamicAttributes = dynamicAttributes;
     }
 
-    public NftMetadata(String name, String image, Map<String, String> dynamicAttributes) {
+    public NftMetadata(String name, String image, Map<String, String> dynamicAttributes, String policyId) {
         this.name = name;
         this.image = image;
         this.dynamicAttributes = dynamicAttributes;
+        this.policyId = policyId;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(String attributes) {
+        this.attributes = attributes;
+    }
+
+    public String getPolicyId() {
+        return policyId;
+    }
+
+    public void setPolicyId(String policyId) {
+        this.policyId = policyId;
     }
 
     public String getReceiverAddress() {
