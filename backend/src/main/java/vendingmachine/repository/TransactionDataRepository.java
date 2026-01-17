@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import vendingmachine.model.TransactionData;
@@ -20,4 +21,8 @@ public interface TransactionDataRepository extends JpaRepository<TransactionData
 
     @Query(value = "SELECT id, txHash, senderAddress, sum(amountSent) AS amountSent, amountToMint, amountMinted, blockTime, refund, policyId, refunded FROM `tx` WHERE policyId= ? group by txhash", nativeQuery = true)
     ArrayList<TransactionData> findAllByPolicyId(String policyId);
+
+    @Query("SELECT COALESCE(SUM(t.amountMinted), 0) FROM TransactionData t WHERE t.policyId = :policyId")
+    Integer sumAmountMintedByPolicyId(@Param("policyId") String policyId);
+
 }
