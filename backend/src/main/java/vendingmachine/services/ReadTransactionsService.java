@@ -1,4 +1,4 @@
-package vendingmachine.utils;
+package vendingmachine.services;
 
 import com.bloxbean.cardano.client.api.common.OrderEnum;
 import com.bloxbean.cardano.client.api.exception.ApiException;
@@ -7,16 +7,26 @@ import com.bloxbean.cardano.client.backend.model.AddressTransactionContent;
 import com.bloxbean.cardano.client.backend.model.TransactionContent;
 import com.bloxbean.cardano.client.backend.model.TxContentUtxo;
 import com.bloxbean.cardano.client.exception.CborSerializationException;
-import com.bloxbean.cardano.client.transaction.spec.Policy;
+import org.springframework.stereotype.Service;
+import vendingmachine.model.PolicyObject;
+import vendingmachine.repository.TransactionDataRepository;
+import vendingmachine.utils.Base;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class ReadWalletTx extends Base {
+@Service
+public class ReadTransactionsService extends Base {
 
-    public static void readTx(String mintingAddress, int mintPrice, int limitAmountPerTx, Policy policy) throws ApiException, SQLException, CborSerializationException {
+    private TransactionDataRepository transactionDataRepository;
+
+    public ReadTransactionsService(TransactionDataRepository transactionDataRepository) {
+        this.transactionDataRepository = transactionDataRepository;
+    }
+
+    public void readTx(String mintingAddress, int mintPrice, int limitAmountPerTx, PolicyObject policy) throws ApiException, SQLException, CborSerializationException {
 
         // Read all transactions received to the minting address and save their txhash, blocktime, blockheight, txindex
         Result<List<AddressTransactionContent>> result;
@@ -67,14 +77,23 @@ public class ReadWalletTx extends Base {
                         refunded = false;
                     }
 
-                    DbOperations.insertTxDetailedInfo(tx.get(i).getTxHash(), tx.get(i).getTxIndex(), (int) tx.get(i).getBlockHeight(), (int) tx.get(i).getBlockTime(), 1, Integer.parseInt(txUtxo.getValue().getOutputs().get(j).getAmount().get(0).getQuantity()), txUtxo.getValue().getInputs().get(0).getAddress(),
-                            refund, amountToMint, policy.getPolicyId(), refunded);
+                    transactionDataRepository.insertTxDetailedInfo(tx.get(i).getTxHash(),
+                            tx.get(i).getTxIndex(),
+                            (int) tx.get(i).getBlockHeight(),
+                            (int) tx.get(i).getBlockTime(),
+                            1,
+                            Integer.parseInt(txUtxo.getValue().getOutputs().get(j).getAmount().get(0).getQuantity()),
+                            txUtxo.getValue().getInputs().get(0).getAddress(),
+                            refund,
+                            amountToMint,
+                            policy.getPolicyId(),
+                            refunded);
                 }
             }
         }
     }
 
-    public static long getTxDate(String txHash) throws ApiException {
+    public long getTxDate(String txHash) throws ApiException {
         Result<TransactionContent> txContentResult = transactionService.getTransaction(txHash);
         long blockTime = 0;
 
