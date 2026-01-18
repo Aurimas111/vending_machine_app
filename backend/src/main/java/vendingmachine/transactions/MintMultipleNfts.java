@@ -1,10 +1,13 @@
 package vendingmachine.transactions;
 
+import org.springframework.stereotype.Service;
 import vendingmachine.model.*;
+import vendingmachine.repository.NftMetadataRepository;
+import vendingmachine.repository.TransactionDataRepository;
 import vendingmachine.services.VendingMachineStatusPublisher;
 import vendingmachine.utils.Base;
-import vendingmachine.utils.DbOperations;
-import vendingmachine.utils.ReadWalletTx;
+
+import vendingmachine.services.ReadTransactionsService;
 import com.bloxbean.cardano.client.account.Account;
 import com.bloxbean.cardano.client.api.exception.ApiException;
 import com.bloxbean.cardano.client.api.model.Result;
@@ -28,23 +31,33 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Service
 public class MintMultipleNfts extends Base {
     static ArrayList<TransactionData> mintTransactions = new ArrayList<>();
+    private final ReadTransactionsService readTransactionsService;
+    private final TransactionDataRepository transactionDataRepository;
+    private final NftMetadataRepository nftMetadataRepository;
+
+    public MintMultipleNfts(ReadTransactionsService readTransactionsService, TransactionDataRepository transactionDataRepository, NftMetadataRepository nftMetadataRepository) {
+        this.readTransactionsService = readTransactionsService;
+        this.transactionDataRepository = transactionDataRepository;
+        this.nftMetadataRepository = nftMetadataRepository;
+    }
 
     // This method queues the minting of NFTs based on the provided parameters
     // It checks the number of NFTs already minted and continues minting until the limit is reached or stopped externally
     // It handles the minting process in batches defined by mintLimitPerTx
     // It also manages the metadata and transaction data for each minting operation
-    public static void queue(Account sender, Policy policy, String slot, int mintLimitPerTx, int amountOfNftsNotToMint, AtomicBoolean stopFlag, VendingMachineStatusPublisher publisher, String ownerWalletAddress) throws SQLException, CborSerializationException, InterruptedException, ApiException {
+    public void queue(Account sender, Policy policy, String slot, int mintLimitPerTx, int amountOfNftsNotToMint, AtomicBoolean stopFlag, VendingMachineStatusPublisher publisher, String ownerWalletAddress) throws SQLException, CborSerializationException, InterruptedException, ApiException {
 
         ArrayList<NftMetadata> metadataNotMinted = new ArrayList<>();
         ArrayList<String> txHashNotMinted = new ArrayList<>();
         ArrayList<String> notMintedAddress = new ArrayList<>();
         ArrayList<Integer> amountsToMint = new ArrayList<>();
 
-        int collectionSize = DbOperations.getCollectionSize(policy.getPolicyId());
+        int collectionSize = nftMetadataRepository.getCollectionSizeByPolicyId(policy.getPolicyId());
 
-        int mintCounter = DbOperations.getMintedNftCount(policy.getPolicyId());
+        int mintCounter = transactionDataRepository.getMintedNftCountByPolicyId(policy.getPolicyId());
         System.out.println("Minted NFT count: " + mintCounter);
 
         if(mintCounter <= collectionSize - amountOfNftsNotToMint) {
@@ -56,8 +69,8 @@ public class MintMultipleNfts extends Base {
                     txHashNotMinted.clear();
                     amountsToMint.clear();
                     metadataNotMinted.clear();
-                    
-                    DbOperations.readTxData(policy, mintTransactions);
+
+                    mintTransactions = transactionDataRepository.findAllByPolicyIdForMinting(policy.getPolicyId());
 
                     System.out.println(mintTransactions.size() + " transactions received");
 
@@ -67,7 +80,7 @@ public class MintMultipleNfts extends Base {
                         continue;
                     }
 
-                    metadataNotMinted = DbOperations.readNotMintedMetadata(policy.getPolicyId());
+                    metadataNotMinted = nftMetadataRepository.findAllNotMintedByPolicyId(policy.getPolicyId());
 
                     if (metadataNotMinted.size() < mintLimitPerTx + amountOfNftsNotToMint) {
                         System.out.println("Not enough metadata available to mint " + mintLimitPerTx + " NFTs");
@@ -110,8 +123,7 @@ public class MintMultipleNfts extends Base {
     }
     // This method mints NFTs based on the provided policy, metadata, slot, sender account, receivers, transaction hashes, and amounts to mint
     // It creates a transaction for minting the NFTs and attaches the metadata
-    // It also updates the database with the minted amounts and transaction details
-    public static void mintNfts(Policy policy, ArrayList<NftMetadata> metadataNotMinted, String slot, Account sender, ArrayList<String> receivers, ArrayList<String> txHashes, ArrayList<Integer> amountToMint, int mintLimitPerTx, VendingMachineStatusPublisher publisher, String ownerWalletAddress) throws CborSerializationException, SQLException, ApiException, InterruptedException {
+    public void mintNfts(Policy policy, ArrayList<NftMetadata> metadataNotMinted, String slot, Account sender, ArrayList<String> receivers, ArrayList<String> txHashes, ArrayList<Integer> amountToMint, int mintLimitPerTx, VendingMachineStatusPublisher publisher, String ownerWalletAddress) throws CborSerializationException, SQLException, ApiException, InterruptedException {
 
         ArrayList<Asset> assets = new ArrayList<>();
 
@@ -173,18 +185,18 @@ public class MintMultipleNfts extends Base {
                     int remaining = receivers.size() - mintedSoFar;
 
                     int toMint = Math.min(remaining, requested);
-                    DbOperations.updateAmountToMint(txHashes.get(i), requested - toMint);
-                    DbOperations.updateMintedAmount(txHashes.get(i), toMint + mintTransactions.get(i).getAmountMinted());
+                    transactionDataRepository.updateAmountToMintByTxHash(txHashes.get(i), requested - toMint);
+                    transactionDataRepository.updateAmountMintedByTxHash(txHashes.get(i), toMint + mintTransactions.get(i).getAmountMinted());
 
                     mintedSoFar += toMint;
                     if (mintedSoFar >= receivers.size()) break;
                 }
 
                 TimeUnit.SECONDS.sleep(2); // wait for the transaction to be processed before fetching the block time
-                long blockTime = ReadWalletTx.getTxDate(result.getValue());
+                long blockTime = readTransactionsService.getTxDate(result.getValue());
                 // Mark all NFTs as minted in the database and save tx hash with block time for frontend display
                 for (int i = 0; i < receivers.size(); i++) {
-                    DbOperations.updateMetadataMinted(metadataNotMinted.get(i).getName(), policy.getPolicyId(), result.getValue(), blockTime, receivers.get(i));
+                    nftMetadataRepository.updateMetadataMinted(result.getValue(), blockTime, receivers.get(i), policy.getPolicyId(), metadataNotMinted.get(i).getName());
                 }
             } else {
                 System.out.println("Transaction failed: " + result);
@@ -201,7 +213,7 @@ public class MintMultipleNfts extends Base {
         }
     }
 
-    private static String encodeFileToBase64Binary(String imageUrl) {
+    private String encodeFileToBase64Binary(String imageUrl) {
         File file = new File(imageUrl);
         String encodedfile = null;
         try {

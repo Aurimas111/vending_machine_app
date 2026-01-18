@@ -1,18 +1,20 @@
 package vendingmachine.services;
 
+import com.bloxbean.cardano.client.transaction.spec.Policy;
 import vendingmachine.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import vendingmachine.repository.PolicyRepository;
+import vendingmachine.repository.UserConfigRepository;
 import vendingmachine.transactions.MintMultipleNfts;
 import vendingmachine.transactions.Refunds;
 import vendingmachine.utils.Constant;
-import vendingmachine.utils.DbOperations;
 import com.bloxbean.cardano.client.account.Account;
 import com.bloxbean.cardano.client.api.exception.ApiException;
 import com.bloxbean.cardano.client.common.model.Networks;
 import com.bloxbean.cardano.client.exception.CborSerializationException;
-import com.bloxbean.cardano.client.transaction.spec.Policy;
 import org.springframework.stereotype.Service;
+import vendingmachine.utils.DbOperations;
 
 import java.sql.SQLException;
 import java.util.Map;
@@ -24,17 +26,20 @@ public class VendingMachineService {
     private static final Map<String, Session> activeSessions = new ConcurrentHashMap<>();
 
     private final VendingMachineStatusPublisher publisher;
+    private final MintMultipleNfts mintMultipleNfts;
+    private final PolicyRepository policyRepository;
+    private final UserConfigRepository userConfigRepository;
     private DbOperations dbOperations;
 
-    public VendingMachineService(VendingMachineStatusPublisher publisher, DbOperations dbOperations) {
+    public VendingMachineService(VendingMachineStatusPublisher publisher, MintMultipleNfts mintMultipleNfts, PolicyRepository policyRepository, UserConfigRepository userConfigRepository, DbOperations dbOperations) {
         this.publisher = publisher;
+        this.mintMultipleNfts = mintMultipleNfts;
+        this.policyRepository = policyRepository;
+        this.userConfigRepository = userConfigRepository;
         this.dbOperations = dbOperations;
     }
 
-     // Initiates the NFT minting process for a specific user
-     // Retrieves necessary configurations and policies, and starts a new thread to process the minting logic.
-     // If a minting session for the user is already active, the method will not initiate a new one.
-    public void startMinting(String userAddress) throws SQLException, CborSerializationException {
+    public void startMinting(String userAddress) throws SQLException {
         if (activeSessions.containsKey(userAddress)) {
             log.info("Minting already in progress for user: {}", userAddress);
             return;
@@ -45,7 +50,7 @@ public class VendingMachineService {
 
         Account sender = new Account(Networks.preprod(), Constant.RECOVERY_PHRASE);
         Policy policy = dbOperations.getPolicyByWallet(userAddress);
-        UserConfig userConfig = dbOperations.getUserConfig(userAddress);
+        UserConfig userConfig = userConfigRepository.findByOwnerWalletAddress(userAddress);
         String slot = userConfig.getPolicySlot();
         int mintLimitPerTx = userConfig.getNFTsToMintPerTx();
         int amountOfNftsNotToMint = userConfig.getAmountOfNFTsNotToMint();
@@ -54,7 +59,7 @@ public class VendingMachineService {
             try {
                 log.info("Calling minting logic for user: {}", userAddress);
                 publisher.send(userConfig.getOwnerWalletAddress(), new MintStatusMessage(policy.getPolicyId(), MintStatus.STARTED, "", "Minting process started and being monitored"));
-                MintMultipleNfts.queue(sender, policy, slot, mintLimitPerTx, amountOfNftsNotToMint, session.getStopFlag(), publisher, userConfig.getOwnerWalletAddress());
+                mintMultipleNfts.queue(sender, policy, slot, mintLimitPerTx, amountOfNftsNotToMint, session.getStopFlag(), publisher, userConfig.getOwnerWalletAddress());
                 Thread.sleep(5000);
 
             } catch (CborSerializationException | SQLException | InterruptedException | ApiException e) {
@@ -72,11 +77,10 @@ public class VendingMachineService {
         }).start();
     }
 
-    // Stops the minting process for a specific user by setting the stop flag in the session
-    public void stopMinting(String userAddress) throws SQLException, CborSerializationException {
+    public void stopMinting(String userAddress) {
         Session session = activeSessions.get(userAddress);
-        UserConfig userConfig = dbOperations.getUserConfig(userAddress);
-        Policy policy = dbOperations.getPolicyByWallet(userAddress);
+        PolicyObject policy = policyRepository.findByOwnerWallet(userAddress);
+        UserConfig userConfig = userConfigRepository.findByOwnerWalletAddress(userAddress);
         if (session != null) {
             session.stop();
             log.info("Requested to stop minting for user: {}", userAddress);
@@ -86,9 +90,7 @@ public class VendingMachineService {
         }
     }
 
-    // Initiates the refunding process for a specific user
-    // Retrieves necessary configurations and policies, and starts a new thread to process the refunding logic.
-    public void startRefunding(String userAddress) throws SQLException, CborSerializationException {
+    public void startRefunding(String userAddress) {
         if (activeSessions.containsKey(userAddress)) {
             log.info("Refunding already in progress for user: {}", userAddress);
             return;
@@ -97,8 +99,8 @@ public class VendingMachineService {
         Session session = new Session();
         activeSessions.put(userAddress, session);
 
-        Policy policy = dbOperations.getPolicyByWallet(userAddress);
-        UserConfig userConfig = dbOperations.getUserConfig(userAddress);
+        PolicyObject policy = policyRepository.findByOwnerWallet(userAddress);
+        UserConfig userConfig = userConfigRepository.findByOwnerWalletAddress(userAddress);
         Account account = new Account(Networks.preprod(), Constant.RECOVERY_PHRASE);
 
         int amountOfRefundsPerTx = userConfig.getRefundsPerTxLimit();
@@ -117,24 +119,19 @@ public class VendingMachineService {
             } finally {
                 activeSessions.remove(userAddress);
                 log.info("Stopped refund loop for user: {}", userAddress);
-                try {
-                    publisher.send(userConfig.getOwnerWalletAddress(), new RefundStatusMessage(policy.getPolicyId(), RefundStatus.STOPPED, "", "Refund process has been stopped"));
-                } catch (CborSerializationException e) {
-                    throw new RuntimeException(e);
-                }
+                publisher.send(userConfig.getOwnerWalletAddress(), new RefundStatusMessage(policy.getPolicyId(), RefundStatus.STOPPED, "", "Refund process has been stopped"));
             }
         }).start();
     }
 
-    // Stops the refunding process for a specific user by setting the stop flag in the session
-    public void stopRefunding(String userAddress) throws SQLException, CborSerializationException {
-        UserConfig userConfig = dbOperations.getUserConfig(userAddress);
-        Policy policy = dbOperations.getPolicyByWallet(userAddress);
+    public void stopRefunding(String userAddress) {
+        PolicyObject policy = policyRepository.findByOwnerWallet(userAddress);
+        UserConfig userConfig = userConfigRepository.findByOwnerWalletAddress(userAddress);
         Session session = activeSessions.get(userAddress);
         if (session != null) {
             session.stop();
             log.info("Requested to stop refunding for user: {}", userAddress);
-        publisher.send(userConfig.getOwnerWalletAddress(), new RefundStatusMessage(policy.getPolicyId(), RefundStatus.STOPPED, "", "Refund process has been stopped"));
+            publisher.send(userConfig.getOwnerWalletAddress(), new RefundStatusMessage(policy.getPolicyId(), RefundStatus.STOPPED, "", "Refund process has been stopped"));
         } else {
             log.info("No active refunding session found for user: {}", userAddress);
         }

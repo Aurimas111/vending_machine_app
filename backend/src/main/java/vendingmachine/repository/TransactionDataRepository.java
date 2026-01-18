@@ -25,4 +25,20 @@ public interface TransactionDataRepository extends JpaRepository<TransactionData
     @Query("SELECT COALESCE(SUM(t.amountMinted), 0) FROM TransactionData t WHERE t.policyId = :policyId")
     Integer sumAmountMintedByPolicyId(@Param("policyId") String policyId);
 
+    @Query(value = "SELECT txhash, senderAddress, sum(amountSent), amountToMint, amountMinted FROM `tx` WHERE amountToMint > 0 and policyId= ? group by txhash ORDER BY `tx`.`blockHeight` ASC", nativeQuery = true)
+    ArrayList<TransactionData> findAllByPolicyIdForMinting(String policyId);
+
+    @Query(value = "SELECT sum(amountMinted) FROM tx where `policyId` = ?", nativeQuery = true)
+    int getMintedNftCountByPolicyId(String policyId);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE TransactionData t SET t.amountToMint = :amountToMint WHERE t.txHash = :txHash")
+    void updateAmountToMintByTxHash(@Param("txHash") String txHash, @Param("amountToMint") int amountToMint);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE TransactionData t SET t.amountMinted = :amountMinted WHERE t.txHash = :txHash")
+    void updateAmountMintedByTxHash(@Param("txHash") String txHash, @Param("amountMinted") int amountMinted);
+
 }
