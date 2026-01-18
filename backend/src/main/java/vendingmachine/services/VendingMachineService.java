@@ -30,13 +30,15 @@ public class VendingMachineService {
     private final PolicyRepository policyRepository;
     private final UserConfigRepository userConfigRepository;
     private DbOperations dbOperations;
+    private final Refunds refunds;
 
-    public VendingMachineService(VendingMachineStatusPublisher publisher, MintMultipleNfts mintMultipleNfts, PolicyRepository policyRepository, UserConfigRepository userConfigRepository, DbOperations dbOperations) {
+    public VendingMachineService(VendingMachineStatusPublisher publisher, MintMultipleNfts mintMultipleNfts, PolicyRepository policyRepository, UserConfigRepository userConfigRepository, DbOperations dbOperations, Refunds refunds) {
         this.publisher = publisher;
         this.mintMultipleNfts = mintMultipleNfts;
         this.policyRepository = policyRepository;
         this.userConfigRepository = userConfigRepository;
         this.dbOperations = dbOperations;
+        this.refunds = refunds;
     }
 
     public void startMinting(String userAddress) throws SQLException {
@@ -90,7 +92,7 @@ public class VendingMachineService {
         }
     }
 
-    public void startRefunding(String userAddress) {
+    public void startRefunding(String userAddress) throws SQLException {
         if (activeSessions.containsKey(userAddress)) {
             log.info("Refunding already in progress for user: {}", userAddress);
             return;
@@ -99,7 +101,7 @@ public class VendingMachineService {
         Session session = new Session();
         activeSessions.put(userAddress, session);
 
-        PolicyObject policy = policyRepository.findByOwnerWallet(userAddress);
+        Policy policy = dbOperations.getPolicyByWallet(userAddress);
         UserConfig userConfig = userConfigRepository.findByOwnerWalletAddress(userAddress);
         Account account = new Account(Networks.preprod(), Constant.RECOVERY_PHRASE);
 
@@ -110,7 +112,7 @@ public class VendingMachineService {
                 publisher.send(userConfig.getOwnerWalletAddress(), new RefundStatusMessage(policy.getPolicyId(), RefundStatus.INITIATED, "", "Refund process started and being monitored"));
 
                 log.info("Calling refund logic for user: {}", userAddress);
-                Refunds.startRefund(account, policy, amountOfRefundsPerTx, session.getStopFlag(), publisher, userConfig.getOwnerWalletAddress());
+                refunds.startRefund(account, policy, amountOfRefundsPerTx, session.getStopFlag(), publisher, userConfig.getOwnerWalletAddress());
                 Thread.sleep(5000);
 
             } catch (CborSerializationException | SQLException | InterruptedException | ApiException e) {
@@ -119,7 +121,11 @@ public class VendingMachineService {
             } finally {
                 activeSessions.remove(userAddress);
                 log.info("Stopped refund loop for user: {}", userAddress);
-                publisher.send(userConfig.getOwnerWalletAddress(), new RefundStatusMessage(policy.getPolicyId(), RefundStatus.STOPPED, "", "Refund process has been stopped"));
+                try {
+                    publisher.send(userConfig.getOwnerWalletAddress(), new RefundStatusMessage(policy.getPolicyId(), RefundStatus.STOPPED, "", "Refund process has been stopped"));
+                } catch (CborSerializationException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }).start();
     }

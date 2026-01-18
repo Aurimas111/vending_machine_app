@@ -7,9 +7,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import vendingmachine.dto.RefundDataDTO;
 import vendingmachine.model.TransactionData;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Repository
 public interface TransactionDataRepository extends JpaRepository<TransactionData, Integer> {
@@ -41,4 +43,11 @@ public interface TransactionDataRepository extends JpaRepository<TransactionData
     @Query("UPDATE TransactionData t SET t.amountMinted = :amountMinted WHERE t.txHash = :txHash")
     void updateAmountMintedByTxHash(@Param("txHash") String txHash, @Param("amountMinted") int amountMinted);
 
+    @Modifying
+    @Transactional
+    @Query("UPDATE TransactionData t SET t.refunded = true WHERE t.txHash IN :txHashes AND t.policyId = :policyId")
+    void updateRefundedTxsByTxHashesAndPolicyId(@Param("txHashes") List<String> txHashes, @Param("policyId") String policyId);
+
+    @Query(value = "SELECT sender_address AS refundAddress, refund AS amount, tx_hash AS txHash FROM tx WHERE refunded = false AND refund > 0 AND policy_id = :policyId GROUP BY tx_hash ORDER BY block_height ASC LIMIT :limit", nativeQuery = true)
+    ArrayList<RefundDataDTO> findRefundDataByPolicyId(@Param("policyId") String policyId, @Param("limit") int limit);
 }
