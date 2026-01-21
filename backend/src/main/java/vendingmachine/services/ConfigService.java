@@ -10,6 +10,8 @@ import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import vendingmachine.model.NftMetadata;
 import vendingmachine.model.UserConfig;
+import vendingmachine.repository.NftMetadataRepository;
+import vendingmachine.repository.PolicyRepository;
 import vendingmachine.repository.UserConfigRepository;
 import vendingmachine.utils.Base;
 import vendingmachine.utils.DbOperations;
@@ -24,24 +26,34 @@ import java.util.Map;
 @Service
 public class ConfigService extends Base {
 
-    private UserConfigRepository userConfigRepository;
-    private DbOperations dbOperations;
+    private final UserConfigRepository userConfigRepository;
+    private final NftMetadataRepository nftMetadataRepository;
+    private final PolicyRepository policyRepository;
+    private final DbOperations dbOperations;
 
-    public ConfigService(UserConfigRepository userConfigRepository, DbOperations dbOperations) {
+    public ConfigService(UserConfigRepository userConfigRepository, NftMetadataRepository nftMetadataRepository, DbOperations dbOperations, PolicyRepository policyRepository) {
         this.userConfigRepository = userConfigRepository;
+        this.nftMetadataRepository = nftMetadataRepository;
         this.dbOperations = dbOperations;
+        this.policyRepository = policyRepository;
     }
 
-    public UserConfig getConfig(String address) throws SQLException, CborSerializationException {
+    public UserConfig getConfig(String address) {
         return userConfigRepository.findByOwnerWalletAddress(address);
     }
 
-    public Boolean deletePolicy(String address) throws SQLException, CborSerializationException {
+    public Boolean deletePolicy(String address) throws SQLException {
         Policy policy = dbOperations.getPolicyByWallet(address);
 
-        if(DbOperations.deletePolicy(address) && DbOperations.deleteMetadata(policy.getPolicyId())){
+        if (policy == null) {
+            return false;
+        }
+        try {
+            policyRepository.deleteByOwnerWallet(address);
+            userConfigRepository.clearPolicyDataByOwnerWalletAddress(address);
             return true;
-        } else {
+        } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -50,7 +62,7 @@ public class ConfigService extends Base {
 
         // Check if UserConfig exists, if not, create a new one with default values
         JSONObject obj = new JSONObject(data);
-        UserConfig userConfig = dbOperations.getUserConfig(address);
+        UserConfig userConfig = userConfigRepository.findByOwnerWalletAddress(address);
         String collectionName = obj.getString("collectionName");
 
         if (userConfig == null) {
@@ -63,7 +75,7 @@ public class ConfigService extends Base {
                     obj.getInt("nftsToNotMint"),
                     obj.getInt("refundsPerTxLimit")
             );
-        }else{
+        } else {
             userConfig.setCollectionName(collectionName);
         }
         int epochs = obj.getInt("policyLockEpoch");
@@ -78,7 +90,7 @@ public class ConfigService extends Base {
 
         userConfig.setPolicy(policy);
         userConfig.setPolicySlot(DbOperations.getPolicySlot(policy.getName()));
-        DbOperations.insertConfig(userConfig);
+        userConfigRepository.insertUserConfig(userConfig);
 
         return policy;
     }
@@ -107,11 +119,11 @@ public class ConfigService extends Base {
                 attributes.put(key, value);
             }
 
-            NftMetadata metadata = new NftMetadata(name, ipfs, attributes);
+            NftMetadata metadata = new NftMetadata(name, ipfs, attributes, policy.getPolicyId());
             metadataList.add(metadata);
         }
         Collections.shuffle(metadataList); // shuffle to not mint all NFTs in a row
-        DbOperations.saveMetadata(metadataList, policy.getPolicyId());
+        nftMetadataRepository.insertNftMetadataList(metadataList);
 
         return true;
     }
@@ -119,10 +131,14 @@ public class ConfigService extends Base {
     public Boolean deleteMetadata(String address) throws SQLException, CborSerializationException {
         Policy policy = dbOperations.getPolicyByWallet(address);
 
-        if(DbOperations.deleteMetadata(policy.getPolicyId())){
+        try {
+            if (nftMetadataRepository.findAllByPolicyId(policy.getPolicyId()).isEmpty()) {
+                return true; // No records found
+            }
+            nftMetadataRepository.deleteByPolicyId(policy.getPolicyId());
             return true;
-        }
-        else{
+        } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -131,7 +147,7 @@ public class ConfigService extends Base {
         JSONObject obj = new JSONObject(data);
 
         // Check if UserConfig exists
-        UserConfig userConfig = dbOperations.getUserConfig(address);
+        UserConfig userConfig = userConfigRepository.findByOwnerWalletAddress(address);
         Policy policy = null;
         policy = dbOperations.getPolicyByWallet(address);
 
@@ -145,12 +161,12 @@ public class ConfigService extends Base {
                     obj.getInt("nftsToNotMint"),
                     obj.getInt("refundsPerTxLimit")
             );
-            if(policy!=null){
+            if (policy != null) {
                 userConfig.setPolicy(policy);
                 userConfig.setPolicySlot(DbOperations.getPolicySlot(policy.getName()));
             }
 
-            DbOperations.insertConfig(userConfig);
+            userConfigRepository.insertUserConfig(userConfig);
             return "UserConfig created successfully";
         } else {
             // Update the existing UserConfig
@@ -160,7 +176,12 @@ public class ConfigService extends Base {
             userConfig.setAmountOfNFTsNotToMint(obj.getInt("nftsToNotMint"));
             userConfig.setRefundsPerTxLimit(obj.getInt("refundsPerTxLimit"));
 
-            DbOperations.updateUserConfig(userConfig);
+            if (policy != null) {
+                userConfig.setPolicyId(policy.getPolicyId());
+            }
+
+            userConfigRepository.save(userConfig);
+
             return "UserConfig updated successfully";
         }
     }

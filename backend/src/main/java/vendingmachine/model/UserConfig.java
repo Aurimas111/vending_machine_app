@@ -34,6 +34,8 @@ public class UserConfig {
     private int AmountOfNFTsNotToMint;
     @Column(name = "refund_per_tx_limit")
     private int RefundsPerTxLimit;
+    @Column(name = "policy_id")
+    private String policyId;
 
     public UserConfig() {
     }
@@ -73,13 +75,29 @@ public class UserConfig {
         this.RefundsPerTxLimit = refundsPerTxLimit;
     }
 
-    public UserConfig(String address, int nftPrice, int nftsReservedPerTx, int nftsToMintPerTx, int nftsToNotMint, int refundsPerTxLimit){
+    public UserConfig(String address, int nftPrice, int nftsReservedPerTx, int nftsToMintPerTx, int nftsToNotMint, int refundsPerTxLimit) {
         this.ownerWalletAddress = address;
         this.NFTPrice = nftPrice;
         this.NFTsReservedPerTx = nftsReservedPerTx;
         this.NFTsToMintPerTx = nftsToMintPerTx;
         this.AmountOfNFTsNotToMint = nftsToNotMint;
         this.RefundsPerTxLimit = refundsPerTxLimit;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getPolicyId() {
+        return policyId;
+    }
+
+    public void setPolicyId(String policyId) {
+        this.policyId = policyId;
     }
 
     public String getOwnerWalletAddress() {

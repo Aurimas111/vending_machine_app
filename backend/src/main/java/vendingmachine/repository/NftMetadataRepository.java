@@ -11,7 +11,7 @@ import java.util.ArrayList;
 
 public interface NftMetadataRepository extends JpaRepository<NftMetadata, Integer> {
 
-    public NftMetadata findByReceiverAddress(String receiverAddress);
+    NftMetadata findByReceiverAddress(String receiverAddress);
 
     @Transactional
     default void insertNftMetadataList(ArrayList<NftMetadata> nftMetadataList) {
@@ -31,4 +31,9 @@ public interface NftMetadataRepository extends JpaRepository<NftMetadata, Intege
     @Transactional
     @Query("UPDATE NftMetadata n SET n.isMinted = true, n.txHash = :txHash, n.timeStamp = :mint_blocktime, n.receiverAddress = :receiver WHERE n.policyId = :policyId and n.name = :name")
     void updateMetadataMinted(@Param("txHash") String txHash, @Param("mint_blocktime") long date, @Param("receiver") String receiver, @Param("policyId") String policyId, @Param("name") String name);
+
+    @Modifying
+    @Transactional
+    void deleteByPolicyId(String policyId);
+
 }
