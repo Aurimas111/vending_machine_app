@@ -15,7 +15,7 @@ import vendingmachine.repository.PolicyRepository;
 import vendingmachine.repository.UserConfigRepository;
 import vendingmachine.utils.Base;
 import vendingmachine.utils.DbOperations;
-import vendingmachine.utils.ReadMetadata;
+import vendingmachine.services.ReadMetadataService;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -30,12 +30,14 @@ public class ConfigService extends Base {
     private final NftMetadataRepository nftMetadataRepository;
     private final PolicyRepository policyRepository;
     private final DbOperations dbOperations;
+    private final ReadMetadataService readMetadataService;
 
-    public ConfigService(UserConfigRepository userConfigRepository, NftMetadataRepository nftMetadataRepository, DbOperations dbOperations, PolicyRepository policyRepository) {
+    public ConfigService(UserConfigRepository userConfigRepository, NftMetadataRepository nftMetadataRepository, DbOperations dbOperations, PolicyRepository policyRepository, ReadMetadataService readMetadataService) {
         this.userConfigRepository = userConfigRepository;
         this.nftMetadataRepository = nftMetadataRepository;
         this.dbOperations = dbOperations;
         this.policyRepository = policyRepository;
+        this.readMetadataService = readMetadataService;
     }
 
     public UserConfig getConfig(String address) {
@@ -82,7 +84,7 @@ public class ConfigService extends Base {
         System.out.println("Creating policy for user: " + address + ", with collection name: " + collectionName);
 
         Keys keys = KeyGenUtil.generateKey();
-        Policy policy = ReadMetadata.createEpochPolicy(collectionName, blockService.getLatestBlock().getValue().getSlot(), epochs, keys);
+        Policy policy = readMetadataService.createEpochPolicy(collectionName, blockService.getLatestBlock().getValue().getSlot(), epochs, keys);
         DbOperations.insertPolicyWithAddress(policy,
                 keys.getVkey().getCborHex(),
                 keys.getSkey().getCborHex(),
@@ -128,7 +130,7 @@ public class ConfigService extends Base {
         return true;
     }
 
-    public Boolean deleteMetadata(String address) throws SQLException, CborSerializationException {
+    public Boolean deleteMetadata(String address) throws SQLException {
         Policy policy = dbOperations.getPolicyByWallet(address);
 
         try {
