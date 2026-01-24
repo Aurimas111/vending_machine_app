@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import vendingmachine.model.PolicyObject;
 import vendingmachine.repository.TransactionDataRepository;
 import vendingmachine.utils.Base;
+import vendingmachine.model.TransactionData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,17 +76,24 @@ public class ReadTransactionsService extends Base {
                         refunded = false;
                     }
 
-                    transactionDataRepository.insertTxDetailedInfo(tx.get(i).getTxHash(),
-                            tx.get(i).getTxIndex(),
-                            (int) tx.get(i).getBlockHeight(),
-                            (int) tx.get(i).getBlockTime(),
-                            1,
-                            Integer.parseInt(txUtxo.getValue().getOutputs().get(j).getAmount().get(0).getQuantity()),
-                            txUtxo.getValue().getInputs().get(0).getAddress(),
-                            refund,
-                            amountToMint,
-                            policy.getPolicyId(),
-                            refunded);
+                    if (!transactionDataRepository.existsByTxHash(tx.get(i).getTxHash())) {
+                        TransactionData transactionData = new TransactionData(
+                                tx.get(i).getTxHash(),
+                                txUtxo.getValue().getInputs().get(0).getAddress(),
+                                Integer.parseInt(txUtxo.getValue().getOutputs().get(j).getAmount().get(0).getQuantity()),
+                                amountToMint,
+                                0
+                        );
+                        transactionData.setTxIndex(tx.get(i).getTxIndex());
+                        transactionData.setBlockHeight((int) tx.get(i).getBlockHeight());
+                        transactionData.setBlockTime((int) tx.get(i).getBlockTime());
+                        transactionData.setValidAddress(true);
+                        transactionData.setRefund(refund);
+                        transactionData.setPolicyId(policy.getPolicyId());
+                        transactionData.setRefunded(refunded);
+
+                        transactionDataRepository.save(transactionData);
+                    }
                 }
             }
         }

@@ -1,5 +1,6 @@
 package vendingmachine.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import vendingmachine.model.UserConfig;
 import vendingmachine.services.ConfigService;
@@ -22,7 +23,6 @@ public class ConfigController {
         this.configService = configService;
     }
 
-    // get user config for users wallet address
     @GetMapping("/getconfig")
     public ResponseEntity<?> getConfig(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException, ApiException {
         UserConfig userConfig = configService.getConfig(wallet);
@@ -34,7 +34,6 @@ public class ConfigController {
         }
     }
 
-    // delete user's policy
     @DeleteMapping("/deletepolicy")
     public ResponseEntity<?> deletePolicy(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException, ApiException {
         // if policy is deleted, metadata is deleted as well
@@ -47,18 +46,16 @@ public class ConfigController {
         }
     }
 
-    // create a new policy for the user
     @PostMapping("/createpolicy")
     public ResponseEntity<?> createPolicy(@AuthenticationPrincipal String wallet, @RequestBody String data) throws SQLException, CborSerializationException, ApiException {
         Policy policy = configService.createPolicy(data, wallet);
         return ResponseEntity.ok(policy.getPolicyId());
     }
 
-    // save collection metadata
     // metadata is a json list of NFTs with their attributes
     // metadata is stored in the database and associated with the user's policy id
     @PostMapping("/createmetadata")
-    public ResponseEntity<?> createMetadata(@AuthenticationPrincipal String wallet, @RequestBody String data) throws SQLException, CborSerializationException, ApiException {
+    public ResponseEntity<?> createMetadata(@AuthenticationPrincipal String wallet, @RequestBody String data) throws SQLException, CborSerializationException, ApiException, JsonProcessingException {
         // metadata is not editable
 
         Boolean success = configService.createMetadata(data, wallet);
@@ -83,7 +80,6 @@ public class ConfigController {
         }
     }
 
-    // set user's parameters for minting and refunds
     @PutMapping("/setparameters")
     public ResponseEntity<?> setParameters(@AuthenticationPrincipal String wallet, @RequestBody String data) throws SQLException, CborSerializationException, ApiException {
 

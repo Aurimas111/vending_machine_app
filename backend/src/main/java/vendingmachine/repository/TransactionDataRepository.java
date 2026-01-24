@@ -50,4 +50,6 @@ public interface TransactionDataRepository extends JpaRepository<TransactionData
 
     @Query(value = "SELECT sender_address AS refundAddress, refund AS amount, tx_hash AS txHash FROM tx WHERE refunded = false AND refund > 0 AND policy_id = :policyId GROUP BY tx_hash ORDER BY block_height ASC LIMIT :limit", nativeQuery = true)
     ArrayList<RefundDataDTO> findRefundDataByPolicyId(@Param("policyId") String policyId, @Param("limit") int limit);
+
+    boolean existsByTxHash(String txHash);
 }

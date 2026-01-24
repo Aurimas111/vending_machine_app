@@ -5,6 +5,8 @@ import com.bloxbean.cardano.client.crypto.KeyGenUtil;
 import com.bloxbean.cardano.client.crypto.Keys;
 import com.bloxbean.cardano.client.exception.CborSerializationException;
 import com.bloxbean.cardano.client.transaction.spec.Policy;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,7 @@ public class ConfigService extends Base {
     private final PolicyRepository policyRepository;
     private final DbOperations dbOperations;
     private final ReadMetadataService readMetadataService;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     public ConfigService(UserConfigRepository userConfigRepository, NftMetadataRepository nftMetadataRepository, DbOperations dbOperations, PolicyRepository policyRepository, ReadMetadataService readMetadataService) {
         this.userConfigRepository = userConfigRepository;
@@ -101,7 +104,7 @@ public class ConfigService extends Base {
         return policy;
     }
 
-    public Boolean createMetadata(String data, String address) throws CborSerializationException, SQLException {
+    public Boolean createMetadata(String data, String address) throws CborSerializationException, SQLException, JsonProcessingException {
         JSONObject obj = new JSONObject(data);
         JSONArray metadataJsonArray = obj.getJSONArray("metadata");
         ArrayList<NftMetadata> metadataList = new ArrayList<>();
@@ -125,7 +128,13 @@ public class ConfigService extends Base {
                 attributes.put(key, value);
             }
 
-            NftMetadata metadata = new NftMetadata(name, ipfs, attributes, policy.getPolicyId());
+            String attributesJson = null;
+            try {
+                attributesJson = mapper.writeValueAsString(attributes);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+            NftMetadata metadata = new NftMetadata(name, ipfs, attributesJson, policy.getPolicyId());
             metadataList.add(metadata);
         }
         Collections.shuffle(metadataList); // shuffle to not mint all NFTs in a row

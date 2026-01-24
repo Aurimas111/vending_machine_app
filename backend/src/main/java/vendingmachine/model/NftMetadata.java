@@ -8,6 +8,7 @@ import java.util.Map;
 @Table(name = "metadata")
 public class NftMetadata {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     @Column(name = "name")
     private String name;
@@ -84,6 +85,13 @@ public class NftMetadata {
         this.name = name;
         this.image = image;
         this.dynamicAttributes = dynamicAttributes;
+        this.policyId = policyId;
+    }
+
+    public NftMetadata(String name, String ipfs, String attributes, String policyId) {
+        this.name = name;
+        this.image = ipfs;
+        this.attributes = attributes;
         this.policyId = policyId;
     }
 
