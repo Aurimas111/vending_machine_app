@@ -27,11 +27,11 @@ public interface TransactionDataRepository extends JpaRepository<TransactionData
     @Query("SELECT COALESCE(SUM(t.amountMinted), 0) FROM TransactionData t WHERE t.policyId = :policyId")
     Integer sumAmountMintedByPolicyId(@Param("policyId") String policyId);
 
-    @Query(value = "SELECT txhash, senderAddress, sum(amountSent), amountToMint, amountMinted FROM `tx` WHERE amountToMint > 0 and policyId= ? group by txhash ORDER BY `tx`.`blockHeight` ASC", nativeQuery = true)
+    @Query(value = "SELECT id, txhash, senderAddress, sum(amountSent) AS amountSent, amountToMint, amountMinted, blockTime, refund, policyId, refunded FROM `tx` WHERE amountToMint > 0 and policyId= ? group by txhash ORDER BY `tx`.`blockHeight` ASC", nativeQuery = true)
     ArrayList<TransactionData> findAllByPolicyIdForMinting(String policyId);
 
     @Query(value = "SELECT sum(amountMinted) FROM tx where `policyId` = ?", nativeQuery = true)
-    int getMintedNftCountByPolicyId(String policyId);
+    Integer getMintedNftCountByPolicyId(String policyId);
 
     @Modifying
     @Transactional
@@ -48,7 +48,7 @@ public interface TransactionDataRepository extends JpaRepository<TransactionData
     @Query("UPDATE TransactionData t SET t.refunded = true WHERE t.txHash IN :txHashes AND t.policyId = :policyId")
     void updateRefundedTxsByTxHashesAndPolicyId(@Param("txHashes") List<String> txHashes, @Param("policyId") String policyId);
 
-    @Query(value = "SELECT sender_address AS refundAddress, refund AS amount, tx_hash AS txHash FROM tx WHERE refunded = false AND refund > 0 AND policy_id = :policyId GROUP BY tx_hash ORDER BY block_height ASC LIMIT :limit", nativeQuery = true)
+    @Query(value = "SELECT senderAddress, refund, txHash  FROM tx WHERE refunded = false AND refund > 0 AND policyId = :policyId GROUP BY txHash ORDER BY blockHeight ASC LIMIT :limit", nativeQuery = true)
     ArrayList<RefundDataDTO> findRefundDataByPolicyId(@Param("policyId") String policyId, @Param("limit") int limit);
 
     boolean existsByTxHash(String txHash);

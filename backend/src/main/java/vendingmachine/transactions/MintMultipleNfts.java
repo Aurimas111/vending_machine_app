@@ -45,9 +45,8 @@ public class MintMultipleNfts extends Base {
     }
 
     // This method queues the minting of NFTs based on the provided parameters
-    // It checks the number of NFTs already minted and continues minting until the limit is reached or stopped externally
-    // It handles the minting process in batches defined by mintLimitPerTx
-    // It also manages the metadata and transaction data for each minting operation
+    // checks the number of NFTs already minted and continues minting until the limit is reached or stopped externally
+    // handles the minting process in batches defined by mintLimitPerTx
     public void queue(Account sender, Policy policy, String slot, int mintLimitPerTx, int amountOfNftsNotToMint, AtomicBoolean stopFlag, VendingMachineStatusPublisher publisher, String ownerWalletAddress) throws SQLException, CborSerializationException, InterruptedException, ApiException {
 
         ArrayList<NftMetadata> metadataNotMinted = new ArrayList<>();
@@ -57,77 +56,79 @@ public class MintMultipleNfts extends Base {
 
         int collectionSize = nftMetadataRepository.getCollectionSizeByPolicyId(policy.getPolicyId());
 
-        int mintCounter = transactionDataRepository.getMintedNftCountByPolicyId(policy.getPolicyId());
+        Integer mintCounter = transactionDataRepository.getMintedNftCountByPolicyId(policy.getPolicyId());
+        mintCounter = (mintCounter == null) ? 0 : mintCounter;
         System.out.println("Minted NFT count: " + mintCounter);
 
-        if(mintCounter <= collectionSize - amountOfNftsNotToMint) {
-                while(!stopFlag.get()){
-                    System.out.printf("trying to mint %d NFTs\n", mintLimitPerTx);
-                    publisher.send(ownerWalletAddress,  new MintStatusMessage(policy.getPolicyId(), MintStatus.STARTED, "", "Trying to mint "+ mintLimitPerTx + " NFTs"));
-                    mintTransactions.clear();
-                    notMintedAddress.clear();
-                    txHashNotMinted.clear();
-                    amountsToMint.clear();
-                    metadataNotMinted.clear();
+        if (mintCounter <= collectionSize - amountOfNftsNotToMint) {
+            while (!stopFlag.get()) {
+                System.out.printf("trying to mint %d NFTs\n", mintLimitPerTx);
+                publisher.send(ownerWalletAddress, new MintStatusMessage(policy.getPolicyId(), MintStatus.STARTED, "", "Trying to mint " + mintLimitPerTx + " NFTs"));
+                mintTransactions.clear();
+                notMintedAddress.clear();
+                txHashNotMinted.clear();
+                amountsToMint.clear();
+                metadataNotMinted.clear();
 
-                    mintTransactions = transactionDataRepository.findAllByPolicyIdForMinting(policy.getPolicyId());
+                mintTransactions = transactionDataRepository.findAllByPolicyIdForMinting(policy.getPolicyId());
 
-                    System.out.println(mintTransactions.size() + " transactions received");
+                System.out.println(mintTransactions.size() + " transactions received");
 
-                    if (mintTransactions.isEmpty()) {
-                        System.out.println("No transactions received, waiting for 5 seconds");
-                        TimeUnit.SECONDS.sleep(5);
-                        continue;
-                    }
-
-                    metadataNotMinted = nftMetadataRepository.findAllNotMintedByPolicyId(policy.getPolicyId());
-
-                    if (metadataNotMinted.size() < mintLimitPerTx + amountOfNftsNotToMint) {
-                        System.out.println("Not enough metadata available to mint " + mintLimitPerTx + " NFTs");
-                        stopFlag.set(true);
-                        return;
-                    }
-
-                    for(int i =0;i< mintTransactions.size();i++) {
-
-                        // save hashes and addresses in different variables
-                        txHashNotMinted.add(mintTransactions.get(i).getTxHash());
-                        amountsToMint.add(mintTransactions.get(i).getAmountToMint());
-                        for (int j = 0; j < mintTransactions.get(i).getAmountToMint(); j++) {
-                            if (notMintedAddress.size() == mintLimitPerTx) {
-                                break;
-                            } else {
-                                notMintedAddress.add(mintTransactions.get(i).getSenderAddress());
-                            }
-                        }
-                    }
-                    System.out.print("Amounts to mint: ");
-                    for(int j = 0; j< amountsToMint.size();j++){
-                        System.out.print(amountsToMint.get(j) + "  ");
-                    }
-                    System.out.println();
-
-                    // loop until we have enough addresses
-                    if(notMintedAddress.size()==mintLimitPerTx) {
-                       mintNfts(policy, metadataNotMinted, slot, sender, notMintedAddress, txHashNotMinted, amountsToMint, mintLimitPerTx, publisher, ownerWalletAddress);
-
-                        System.out.println("sleeping for 10 seconds");
-                        TimeUnit.SECONDS.sleep(10);
-                    }
+                if (mintTransactions.isEmpty()) {
+                    System.out.println("No transactions received, waiting for 5 seconds");
+                    TimeUnit.SECONDS.sleep(5);
+                    continue;
                 }
 
-        }else {
+                metadataNotMinted = nftMetadataRepository.findAllNotMintedByPolicyId(policy.getPolicyId());
+
+                if (metadataNotMinted.size() < mintLimitPerTx + amountOfNftsNotToMint) {
+                    System.out.println("Not enough metadata available to mint " + mintLimitPerTx + " NFTs");
+                    stopFlag.set(true);
+                    return;
+                }
+
+                for (int i = 0; i < mintTransactions.size(); i++) {
+
+                    // save hashes and addresses in different variables
+                    txHashNotMinted.add(mintTransactions.get(i).getTxHash());
+                    amountsToMint.add(mintTransactions.get(i).getAmountToMint());
+                    for (int j = 0; j < mintTransactions.get(i).getAmountToMint(); j++) {
+                        if (notMintedAddress.size() == mintLimitPerTx) {
+                            break;
+                        } else {
+                            notMintedAddress.add(mintTransactions.get(i).getSenderAddress());
+                        }
+                    }
+                }
+                System.out.print("Amounts to mint: ");
+                for (int j = 0; j < amountsToMint.size(); j++) {
+                    System.out.print(amountsToMint.get(j) + "  ");
+                }
+                System.out.println();
+
+                // loop until we have enough addresses
+                if (notMintedAddress.size() == mintLimitPerTx) {
+                    mintNfts(policy, metadataNotMinted, slot, sender, notMintedAddress, txHashNotMinted, amountsToMint, mintLimitPerTx, publisher, ownerWalletAddress);
+
+                    System.out.println("sleeping for 10 seconds");
+                    TimeUnit.SECONDS.sleep(10);
+                }
+            }
+
+        } else {
             System.out.println("All NFTs minted!");
             stopFlag.set(true);
         }
     }
+
     // This method mints NFTs based on the provided policy, metadata, slot, sender account, receivers, transaction hashes, and amounts to mint
-    // It creates a transaction for minting the NFTs and attaches the metadata
+    // creates a transaction for minting the NFTs and attaches the metadata
     public void mintNfts(Policy policy, ArrayList<NftMetadata> metadataNotMinted, String slot, Account sender, ArrayList<String> receivers, ArrayList<String> txHashes, ArrayList<Integer> amountToMint, int mintLimitPerTx, VendingMachineStatusPublisher publisher, String ownerWalletAddress) throws CborSerializationException, SQLException, ApiException, InterruptedException {
 
         ArrayList<Asset> assets = new ArrayList<>();
 
-        if(receivers.size()>=mintLimitPerTx) {
+        if (receivers.size() >= mintLimitPerTx) {
             NFTMetadata nftMetadata = NFTMetadata.create();
 
             for (int i = 0; i < receivers.size(); i++) {
@@ -144,10 +145,10 @@ public class MintMultipleNfts extends Base {
                         .name(asset.getName())
                         .image(metadataNotMinted.get(i).getImage())
                         .mediaType("image/png");
-                        //.setImages(List.of(base)) // for on chain nft images
+                //.setImages(List.of(base)) // for on chain nft images
 
                 // add all dynamic attributes as properties
-                for(Map.Entry<String, String> entry: metadataNotMinted.get(i).getDynamicAttributes().entrySet())
+                for (Map.Entry<String, String> entry : metadataNotMinted.get(i).getDynamicAttributes().entrySet())
                     nft.property(entry.getKey(), entry.getValue());
 
                 nftMetadata.addNFT(policy.getPolicyId(), nft);
@@ -156,7 +157,7 @@ public class MintMultipleNfts extends Base {
             long ttl = Long.parseLong(slot);
 
             Tx tx = new Tx();
-            for(int i = 0;i<assets.size();i++)
+            for (int i = 0; i < assets.size(); i++)
                 tx.mintAssets(policy.getPolicyScript(), assets.get(i), receivers.get(i));
 
             tx.attachMetadata(nftMetadata)
@@ -218,7 +219,7 @@ public class MintMultipleNfts extends Base {
         String encodedfile = null;
         try {
             FileInputStream fileInputStreamReader = new FileInputStream(file);
-            byte[] bytes = new byte[(int)file.length()];
+            byte[] bytes = new byte[(int) file.length()];
             fileInputStreamReader.read(bytes);
             encodedfile = new String(Base64.getEncoder().encode(bytes), "UTF-8");
         } catch (FileNotFoundException e) {
