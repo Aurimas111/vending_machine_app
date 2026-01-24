@@ -1,5 +1,6 @@
-package vendingmachine.utils;
+package vendingmachine.services;
 
+import org.springframework.stereotype.Service;
 import vendingmachine.model.*;
 import com.bloxbean.cardano.client.crypto.Keys;
 import com.bloxbean.cardano.client.crypto.VerificationKey;
@@ -18,6 +19,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import vendingmachine.utils.Constant;
 
 import java.io.File;
 import java.io.FileReader;
@@ -27,10 +29,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
-public class ReadMetadata {
+@Service
+public class ReadMetadataService {
     private static final long SLOTS_PER_EPOCH = 5 * 24 * 60 * 60;
-    public static ArrayList<NftMetadata> read(String folderPath) throws IOException, ParseException {
+
+    public ArrayList<NftMetadata> read(String folderPath) throws IOException, ParseException {
         JSONParser parser = new JSONParser();
 
         JSONArray jsonArray = (JSONArray) parser.parse(new FileReader(folderPath));
@@ -46,7 +49,7 @@ public class ReadMetadata {
         return metadataList;
     }
 
-    private static NftMetadata parseMetadataObject(JSONObject jsonObject) {
+    private NftMetadata parseMetadataObject(JSONObject jsonObject) {
         String name = (String) jsonObject.get("name");
         String fileUrl = (String) jsonObject.get("file_url");
         String image = (String) jsonObject.get("image");
@@ -67,14 +70,13 @@ public class ReadMetadata {
         return new NftMetadata(name, fileUrl, image, ipfsHash, attributes);
     }
 
-
-    public static ArrayList<String> uploadImages(ArrayList<NftMetadata> metadata) throws APIException, IOException {
-        ArrayList<String> ipfs= new ArrayList<>();
+    public ArrayList<String> uploadImages(ArrayList<NftMetadata> metadata) throws APIException, IOException {
+        ArrayList<String> ipfs = new ArrayList<>();
         IPFSService ipfsService = new IPFSServiceImpl("https://ipfs.blockfrost.io/api/v0/", Constant.IPFS_KEY);
-        IPFSObject ipfsObject =  new IPFSObject();
-        PinResponse pinResponse =  new PinResponse();
+        IPFSObject ipfsObject = new IPFSObject();
+        PinResponse pinResponse = new PinResponse();
         PinItem pin = new PinItem();
-        for(int i = 0 ;i< metadata.size();i++) {
+        for (int i = 0; i < metadata.size(); i++) {
             ipfsObject = ipfsService.add(new File(metadata.get(i).getFile_url()));
             pinResponse = ipfsService.pinAdd(ipfsObject.getIpfsHash());
             pin = ipfsService.getPinnedObjectByIpfsPath(ipfsObject.getIpfsHash());
@@ -91,18 +93,18 @@ public class ReadMetadata {
         return ipfs;
     }
 
-    public static ArrayList<String> getImages() throws APIException {
+    public ArrayList<String> getImages() throws APIException {
         ArrayList<String> ipfsHashes = new ArrayList<>();
         List<PinItem> pinnedObjects = new ArrayList<>();
         IPFSService ipfsService = new IPFSServiceImpl("https://ipfs.blockfrost.io/api/v0/", Constant.IPFS_KEY);
         pinnedObjects = ipfsService.getAllPinnedObjects(OrderEnum.asc);
-        for(int i =0;i< pinnedObjects.size();i++) {
+        for (int i = 0; i < pinnedObjects.size(); i++) {
             ipfsHashes.add(pinnedObjects.get(i).getIpfsHash());
         }
         return ipfsHashes;
     }
 
-    public static Policy createEpochPolicy(String name, long currentSlot, long epochs, Keys keys) {
+    public Policy createEpochPolicy(String name, long currentSlot, long epochs, Keys keys) {
         VerificationKey verificationKey = keys.getVkey();
         ScriptPubkey scriptPubkey = ScriptPubkey.create(verificationKey);
         RequireTimeBefore requireTimeBefore = new RequireTimeBefore(currentSlot + SLOTS_PER_EPOCH * epochs);

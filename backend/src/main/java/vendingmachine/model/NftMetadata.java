@@ -1,17 +1,40 @@
 package vendingmachine.model;
 
-import java.util.Map;
-public class NftMetadata {
+import jakarta.persistence.*;
 
+import java.util.Map;
+
+@Entity
+@Table(name = "metadata")
+public class NftMetadata {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+    @Column(name = "name")
     private String name;
+    @Column(name = "file_url")
     private String file_url;
+    @Column(name = "image")
     private String image;
+    @Column(name = "ipfs_hash")
     private String ipfsHash;
+    @Column(name = "is_minted")
     private boolean isMinted;
+    @Transient
     private Map<String, String> dynamicAttributes;
+    @Column(name = "attributes")
+    private String attributes;
+    @Column(name = "tx_hash")
     private String txHash;
-    private int timeStamp;
+    @Column(name = "mint_blocktime")
+    private Integer timeStamp;
+    @Column(name = "receiver")
     private String receiverAddress;
+    @Column(name = "policy_id")
+    private String policyId;
+
+    public NftMetadata() {
+    }
 
     public NftMetadata(String name, String file_url, String image, String ipfsHash, boolean isMinted, Map<String, String> dynamicAttributes) {
         this.name = name;
@@ -58,10 +81,42 @@ public class NftMetadata {
         this.dynamicAttributes = dynamicAttributes;
     }
 
-    public NftMetadata(String name, String image, Map<String, String> dynamicAttributes) {
+    public NftMetadata(String name, String image, Map<String, String> dynamicAttributes, String policyId) {
         this.name = name;
         this.image = image;
         this.dynamicAttributes = dynamicAttributes;
+        this.policyId = policyId;
+    }
+
+    public NftMetadata(String name, String ipfs, String attributes, String policyId) {
+        this.name = name;
+        this.image = ipfs;
+        this.attributes = attributes;
+        this.policyId = policyId;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(String attributes) {
+        this.attributes = attributes;
+    }
+
+    public String getPolicyId() {
+        return policyId;
+    }
+
+    public void setPolicyId(String policyId) {
+        this.policyId = policyId;
     }
 
     public String getReceiverAddress() {
@@ -72,11 +127,11 @@ public class NftMetadata {
         this.receiverAddress = receiverAddress;
     }
 
-    public int getTimeStamp() {
+    public Integer getTimeStamp() {
         return timeStamp;
     }
 
-    public void setTimeStamp(int timeStamp) {
+    public void setTimeStamp(Integer timeStamp) {
         this.timeStamp = timeStamp;
     }
 

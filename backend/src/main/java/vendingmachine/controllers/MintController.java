@@ -24,7 +24,6 @@ public class MintController {
         this.mintService = mintService;
     }
 
-    // get NFTs associated with the wallet address
     @GetMapping("/getmints")
     public ResponseEntity<?> getMints(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException {
 
@@ -32,7 +31,6 @@ public class MintController {
         return ResponseEntity.ok(metadata);
     }
 
-    // start minting process for the wallet address
     @PostMapping("/startmint")
     public ResponseEntity<?> startMint(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException {
 
@@ -40,7 +38,6 @@ public class MintController {
         return ResponseEntity.ok("Minting started");
     }
 
-    // stop minting process for the wallet address
     @PostMapping("/stopmint")
     public ResponseEntity<?> stopMint(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException {
 

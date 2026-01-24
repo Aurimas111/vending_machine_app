@@ -20,8 +20,6 @@ public class TransactionController {
         this.transactionService = transactionService;
     }
 
-     // get transactions received to minter address
-     // returns a list of transactions with their status, metadata, amount minted, amount to mint, refund status, nft receiver wallet address
      @GetMapping("/transactions")
      public ResponseEntity<?> getTransactions(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException, ApiException {
 

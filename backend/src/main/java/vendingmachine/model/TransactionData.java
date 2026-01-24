@@ -1,9 +1,18 @@
 package vendingmachine.model;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "tx")
 public class TransactionData {
+
+    @Id
+    private int id;
     private String txHash;
+    @Transient
     private int txIndex;
     private int blockTime;
+    @Column(name = "amountSent")
     private int amount;
     private String senderAddress;
     private int refund;
@@ -11,7 +20,15 @@ public class TransactionData {
     private int amountMinted;
     private String policyId;
     private Boolean refunded;
+    @Transient
     private String status;
+    @Transient
+    private Boolean validAddress;
+    @Transient
+    private int blockHeight;
+
+    public TransactionData() {
+    }
 
     public TransactionData(String txHash, int txIndex, int blockTime, int amount,
                            String senderAddress, int refund, int amountToMint, String policyId, Boolean refunded) {
@@ -45,6 +62,30 @@ public class TransactionData {
         this.amount = amount;
         this.amountToMint = amountToMint;
         this.amountMinted = amountMinted;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public Boolean getValidAddress() {
+        return validAddress;
+    }
+
+    public void setValidAddress(Boolean validAddress) {
+        this.validAddress = validAddress;
+    }
+
+    public int getBlockHeight() {
+        return blockHeight;
+    }
+
+    public void setBlockHeight(int blockHeight) {
+        this.blockHeight = blockHeight;
     }
 
     public String getStatus() {

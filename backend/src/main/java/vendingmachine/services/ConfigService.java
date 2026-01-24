@@ -5,14 +5,20 @@ import com.bloxbean.cardano.client.crypto.KeyGenUtil;
 import com.bloxbean.cardano.client.crypto.Keys;
 import com.bloxbean.cardano.client.exception.CborSerializationException;
 import com.bloxbean.cardano.client.transaction.spec.Policy;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import vendingmachine.model.NftMetadata;
+import vendingmachine.model.PolicyObject;
 import vendingmachine.model.UserConfig;
+import vendingmachine.repository.NftMetadataRepository;
+import vendingmachine.repository.PolicyRepository;
+import vendingmachine.repository.UserConfigRepository;
 import vendingmachine.utils.Base;
 import vendingmachine.utils.DbOperations;
-import vendingmachine.utils.ReadMetadata;
+import vendingmachine.services.ReadMetadataService;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -23,16 +29,41 @@ import java.util.Map;
 @Service
 public class ConfigService extends Base {
 
-    public UserConfig getConfig(String address) throws SQLException, CborSerializationException {
-        return DbOperations.getUserConfig(address);
+    private final UserConfigRepository userConfigRepository;
+    private final NftMetadataRepository nftMetadataRepository;
+    private final PolicyRepository policyRepository;
+    private final DbOperations dbOperations;
+    private final ReadMetadataService readMetadataService;
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    public ConfigService(UserConfigRepository userConfigRepository, NftMetadataRepository nftMetadataRepository, DbOperations dbOperations, PolicyRepository policyRepository, ReadMetadataService readMetadataService) {
+        this.userConfigRepository = userConfigRepository;
+        this.nftMetadataRepository = nftMetadataRepository;
+        this.dbOperations = dbOperations;
+        this.policyRepository = policyRepository;
+        this.readMetadataService = readMetadataService;
     }
 
-    public Boolean deletePolicy(String address) throws SQLException, CborSerializationException {
-        Policy policy = DbOperations.getPolicyByWallet(address);
+    public UserConfig getConfig(String address) throws SQLException {
+        UserConfig userConfig = userConfigRepository.findByOwnerWalletAddress(address);
+        userConfig.setPolicy(dbOperations.getPolicyByWallet(address));
+        userConfig.setMetadataList(nftMetadataRepository.readConfigMetadata(userConfig.getPolicyId()));
 
-        if(DbOperations.deletePolicy(address) && DbOperations.deleteMetadata(policy.getPolicyId())){
+        return userConfig;
+    }
+
+    public Boolean deletePolicy(String address) throws SQLException {
+        Policy policy = dbOperations.getPolicyByWallet(address);
+
+        if (policy == null) {
+            return false;
+        }
+        try {
+            policyRepository.deleteByOwnerWallet(address);
+            userConfigRepository.clearPolicyDataByOwnerWalletAddress(address);
             return true;
-        } else {
+        } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -41,7 +72,7 @@ public class ConfigService extends Base {
 
         // Check if UserConfig exists, if not, create a new one with default values
         JSONObject obj = new JSONObject(data);
-        UserConfig userConfig = DbOperations.getUserConfig(address);
+        UserConfig userConfig = userConfigRepository.findByOwnerWalletAddress(address);
         String collectionName = obj.getString("collectionName");
 
         if (userConfig == null) {
@@ -54,31 +85,30 @@ public class ConfigService extends Base {
                     obj.getInt("nftsToNotMint"),
                     obj.getInt("refundsPerTxLimit")
             );
-        }else{
+        } else {
             userConfig.setCollectionName(collectionName);
         }
         int epochs = obj.getInt("policyLockEpoch");
         System.out.println("Creating policy for user: " + address + ", with collection name: " + collectionName);
 
         Keys keys = KeyGenUtil.generateKey();
-        Policy policy = ReadMetadata.createEpochPolicy(collectionName, blockService.getLatestBlock().getValue().getSlot(), epochs, keys);
-        DbOperations.insertPolicyWithAddress(policy,
-                keys.getVkey().getCborHex(),
-                keys.getSkey().getCborHex(),
-                address); // save the new policy in db
+        Policy policy = readMetadataService.createEpochPolicy(collectionName, blockService.getLatestBlock().getValue().getSlot(), epochs, keys);
+        PolicyObject policyObject = new PolicyObject(policy.getPolicyKeys().toString(), policy.getPolicyId(), policy.getPolicyScript().toString(), policy.getName(),  keys.getVkey().getCborHex(), keys.getSkey().getCborHex(), address);
+        policyRepository.save(policyObject);
 
         userConfig.setPolicy(policy);
-        userConfig.setPolicySlot(DbOperations.getPolicySlot(policy.getName()));
-        DbOperations.insertConfig(userConfig);
+        String policySlot = policy.getPolicyScript().toString().substring( policy.getPolicyScript().toString().indexOf("slot=")+5,  policy.getPolicyScript().toString().indexOf("),"));
+        userConfig.setPolicySlot(policySlot);
+        userConfigRepository.insertUserConfig(userConfig);
 
         return policy;
     }
 
-    public Boolean createMetadata(String data, String address) throws CborSerializationException, SQLException {
+    public Boolean createMetadata(String data, String address) throws CborSerializationException, SQLException, JsonProcessingException {
         JSONObject obj = new JSONObject(data);
         JSONArray metadataJsonArray = obj.getJSONArray("metadata");
         ArrayList<NftMetadata> metadataList = new ArrayList<>();
-        Policy policy = DbOperations.getPolicyByWallet(address);
+        Policy policy = dbOperations.getPolicyByWallet(address);
 
         for (int i = 0; i < metadataJsonArray.length(); i++) {
             JSONObject nftJson = metadataJsonArray.getJSONObject(i);
@@ -98,22 +128,32 @@ public class ConfigService extends Base {
                 attributes.put(key, value);
             }
 
-            NftMetadata metadata = new NftMetadata(name, ipfs, attributes);
+            String attributesJson = null;
+            try {
+                attributesJson = mapper.writeValueAsString(attributes);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+            NftMetadata metadata = new NftMetadata(name, ipfs, attributesJson, policy.getPolicyId());
             metadataList.add(metadata);
         }
         Collections.shuffle(metadataList); // shuffle to not mint all NFTs in a row
-        DbOperations.saveMetadata(metadataList, policy.getPolicyId());
+        nftMetadataRepository.insertNftMetadataList(metadataList);
 
         return true;
     }
 
-    public Boolean deleteMetadata(String address) throws SQLException, CborSerializationException {
-        Policy policy = DbOperations.getPolicyByWallet(address);
+    public Boolean deleteMetadata(String address) throws SQLException {
+        Policy policy = dbOperations.getPolicyByWallet(address);
 
-        if(DbOperations.deleteMetadata(policy.getPolicyId())){
+        try {
+            if (nftMetadataRepository.findAllByPolicyId(policy.getPolicyId()).isEmpty()) {
+                return true; // No records found
+            }
+            nftMetadataRepository.deleteByPolicyId(policy.getPolicyId());
             return true;
-        }
-        else{
+        } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -122,9 +162,9 @@ public class ConfigService extends Base {
         JSONObject obj = new JSONObject(data);
 
         // Check if UserConfig exists
-        UserConfig userConfig = DbOperations.getUserConfig(address);
+        UserConfig userConfig = userConfigRepository.findByOwnerWalletAddress(address);
         Policy policy = null;
-        policy = DbOperations.getPolicyByWallet(address);
+        policy = dbOperations.getPolicyByWallet(address);
 
         if (userConfig == null) {
             userConfig = new UserConfig(
@@ -136,12 +176,13 @@ public class ConfigService extends Base {
                     obj.getInt("nftsToNotMint"),
                     obj.getInt("refundsPerTxLimit")
             );
-            if(policy!=null){
+            if (policy != null) {
                 userConfig.setPolicy(policy);
-                userConfig.setPolicySlot(DbOperations.getPolicySlot(policy.getName()));
+                String policyScript = policyRepository.findPolicyScriptByOwnerWallet(address);
+                userConfig.setPolicySlot(policyScript.substring(policyScript.indexOf("slot=")+5, policyScript.indexOf("),")));
             }
 
-            DbOperations.insertConfig(userConfig);
+            userConfigRepository.insertUserConfig(userConfig);
             return "UserConfig created successfully";
         } else {
             // Update the existing UserConfig
@@ -151,7 +192,12 @@ public class ConfigService extends Base {
             userConfig.setAmountOfNFTsNotToMint(obj.getInt("nftsToNotMint"));
             userConfig.setRefundsPerTxLimit(obj.getInt("refundsPerTxLimit"));
 
-            DbOperations.updateUserConfig(userConfig);
+            if (policy != null) {
+                userConfig.setPolicyId(policy.getPolicyId());
+            }
+
+            userConfigRepository.save(userConfig);
+
             return "UserConfig updated successfully";
         }
     }

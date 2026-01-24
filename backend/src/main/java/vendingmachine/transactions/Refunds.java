@@ -1,18 +1,16 @@
 package vendingmachine.transactions;
 
+import org.springframework.stereotype.Service;
+import vendingmachine.dto.RefundDataDTO;
 import vendingmachine.model.RefundStatus;
 import vendingmachine.model.RefundStatusMessage;
+import vendingmachine.repository.TransactionDataRepository;
 import vendingmachine.services.VendingMachineStatusPublisher;
 import vendingmachine.utils.Base;
-import vendingmachine.utils.Constant;
-import vendingmachine.utils.DbOperations;
 import com.bloxbean.cardano.client.account.Account;
 import com.bloxbean.cardano.client.api.exception.ApiException;
 import com.bloxbean.cardano.client.api.model.Amount;
 import com.bloxbean.cardano.client.api.model.Result;
-import com.bloxbean.cardano.client.backend.api.*;
-import com.bloxbean.cardano.client.backend.blockfrost.common.Constants;
-import com.bloxbean.cardano.client.backend.blockfrost.service.BFBackendService;
 import com.bloxbean.cardano.client.cip.cip20.MessageMetadata;
 import com.bloxbean.cardano.client.exception.CborSerializationException;
 import com.bloxbean.cardano.client.function.helper.SignerProviders;
@@ -22,34 +20,35 @@ import com.bloxbean.cardano.client.transaction.spec.Policy;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
-
+@Service
 public class Refunds extends Base {
 
-    static ArrayList<String> refundAddresses = new ArrayList<>();
-    static ArrayList<Integer> refundAmounts = new ArrayList<>();
-    static ArrayList<String> txHashes = new ArrayList<>();
+    ArrayList<RefundDataDTO> refundDataDTOS = new ArrayList<>();
 
+    private final TransactionDataRepository transactionDataRepository;
 
-    public static void startRefund(Account sender, Policy policy, int refundReceiverLimit, AtomicBoolean stopFlag, VendingMachineStatusPublisher publisher, String ownerWalletAddress) throws SQLException, CborSerializationException, ApiException, InterruptedException {
+    public Refunds(TransactionDataRepository transactionDataRepository) {
+        this.transactionDataRepository = transactionDataRepository;
+    }
+
+    public void startRefund(Account sender, Policy policy, int refundReceiverLimit, AtomicBoolean stopFlag, VendingMachineStatusPublisher publisher, String ownerWalletAddress) throws SQLException, CborSerializationException, ApiException, InterruptedException {
 
         boolean refundsDone = false;
-
-        BackendService backendService =
-                new BFBackendService(Constants.BLOCKFROST_PREPROD_URL, Constant.BF_PROJECT_KEY);
-
         String senderAddress = sender.baseAddress();
 
         while(!stopFlag.get()) {
             System.out.println("Refunds started for policy: " + policy.getPolicyId());
 
-            DbOperations.readRefundData(policy, refundAddresses, refundAmounts, txHashes, refundReceiverLimit);
-            if (refundAddresses.isEmpty())
+            refundDataDTOS = transactionDataRepository.findRefundDataByPolicyId(policy.getPolicyId(), refundReceiverLimit);
+            if (refundDataDTOS.isEmpty())
                 refundsDone = true;
 
-            System.out.printf("Refunds to be processed: %d\n", refundAddresses.size());
+            System.out.printf("Refunds to be processed: %d\n", refundDataDTOS.size());
 
             while (!refundsDone) {
                 if (stopFlag.get()) {
@@ -58,8 +57,8 @@ public class Refunds extends Base {
                 }
 
                 Tx tx = new Tx();
-                for (int i = 0; i < refundAddresses.size(); i++) {
-                    tx.payToAddress(refundAddresses.get(i), Amount.ada((refundAmounts.get(i) / 1000000) - 0.2));
+                for (int i = 0; i < refundDataDTOS.size(); i++) {
+                    tx.payToAddress(refundDataDTOS.get(i).getRefundAddress(), Amount.ada((refundDataDTOS.get(i).getAmount() / 1000000) - 0.2));
                 }
 
                 tx.attachMetadata(MessageMetadata.create().add("NFT mint refund")).from(senderAddress);
@@ -79,16 +78,17 @@ public class Refunds extends Base {
                             "Refund confirmed on Cardano network"
                     ));
                     // update db with refunded information and read more txs for refunds
-                    DbOperations.updateRefundedTxs(policy, txHashes);
-                    refundAddresses.clear();
-                    refundAmounts.clear();
-                    txHashes.clear();
+                    List<String> txHashList = refundDataDTOS.stream()
+                            .map(RefundDataDTO::getTxHash)
+                            .collect(Collectors.toList());
+                    transactionDataRepository.updateRefundedTxsByTxHashesAndPolicyId(txHashList, policy.getPolicyId());
+                    refundDataDTOS.clear();
 
                     System.out.println("sleeping for 10 seconds");
                     TimeUnit.SECONDS.sleep(10);
 
-                    DbOperations.readRefundData(policy, refundAddresses, refundAmounts, txHashes, refundReceiverLimit);
-                    if (refundAddresses.isEmpty())
+                    refundDataDTOS = transactionDataRepository.findRefundDataByPolicyId(policy.getPolicyId(), refundReceiverLimit);
+                    if (refundDataDTOS.isEmpty())
                         refundsDone = true;
 
 

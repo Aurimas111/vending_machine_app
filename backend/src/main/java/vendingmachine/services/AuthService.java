@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import vendingmachine.dto.request.LoginRequest;
 import vendingmachine.dto.response.AuthResponse;
 import vendingmachine.model.UserConfig;
-import vendingmachine.utils.DbOperations;
+import vendingmachine.repository.UserConfigRepository;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -32,6 +32,12 @@ public class AuthService {
 
     private final Map<String, String> nonces = new ConcurrentHashMap<>();
 
+    private final UserConfigRepository userConfigRepository;
+
+    public AuthService(UserConfigRepository userConfigRepository) {
+        this.userConfigRepository = userConfigRepository;
+    }
+
     public String generateNonce(String address) {
         String nonce = UUID.randomUUID().toString();
         nonces.put(address, nonce);
@@ -47,6 +53,7 @@ public class AuthService {
     }
 
     public AuthResponse authenticate(LoginRequest request) {
+
         try {
             String expectedNonce = getNonce(request.getAddress());
             if (expectedNonce == null) {
@@ -75,11 +82,11 @@ public class AuthService {
             clearNonce(request.getAddress());
             String token = generateJWT(request.getAddress());
 
-            UserConfig userConfig = DbOperations.getUserConfig(request.getAddress());
+            UserConfig userConfig = userConfigRepository.findByOwnerWalletAddress(request.getAddress());
 
             if (userConfig == null) {
                 userConfig = new UserConfig(request.getAddress(), 10000000, 5, 5, 0, 3);
-                DbOperations.insertConfig(userConfig);
+                userConfigRepository.save(userConfig);
             }
 
             return new AuthResponse(true, token, "Authentication successful", userConfig);
