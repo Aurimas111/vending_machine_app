@@ -30,4 +30,14 @@ public class PolicyObject {
 
     public PolicyObject() {
     }
+
+    public PolicyObject(String policyKeys, String policyId, String policyScript, String name, String verificationKey, String signingKey, String ownerWallet) {
+        this.policyKeys = policyKeys;
+        this.policyId = policyId;
+        this.policyScript = policyScript;
+        this.name = name;
+        this.verificationKey = verificationKey;
+        this.signingKey = signingKey;
+        this.ownerWallet = ownerWallet;
+    }
 }

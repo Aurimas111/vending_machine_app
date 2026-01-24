@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import vendingmachine.dto.response.MetadataResponse;
 import vendingmachine.model.NftMetadata;
 
 import java.util.ArrayList;
@@ -30,10 +31,13 @@ public interface NftMetadataRepository extends JpaRepository<NftMetadata, Intege
     @Modifying
     @Transactional
     @Query("UPDATE NftMetadata n SET n.isMinted = true, n.txHash = :txHash, n.timeStamp = :mint_blocktime, n.receiverAddress = :receiver WHERE n.policyId = :policyId and n.name = :name")
-    void updateMetadataMinted(@Param("txHash") String txHash, @Param("mint_blocktime") long date, @Param("receiver") String receiver, @Param("policyId") String policyId, @Param("name") String name);
+    void updateMetadataMinted(@Param("txHash") String txHash, @Param("mint_blocktime") Long date, @Param("receiver") String receiver, @Param("policyId") String policyId, @Param("name") String name);
 
     @Modifying
     @Transactional
     void deleteByPolicyId(String policyId);
+
+    @Query("SELECT new vendingmachine.dto.response.MetadataResponse(m.name, m.image, m.attributes) FROM NftMetadata m WHERE m.policyId = :policyId")
+    ArrayList<MetadataResponse> readConfigMetadata(@Param("policyId") String policyId);
 
 }

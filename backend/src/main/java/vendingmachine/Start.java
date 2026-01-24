@@ -60,7 +60,7 @@ public class Start extends Base implements CommandLineRunner {
 
             //Collections.shuffle(metadataList); // shuffle to not mint all NFTs in a row
 
-            DbOperations.saveMetadata(metadataList, policy.getPolicyId());
+            dbOperations.saveMetadata(metadataList, policy.getPolicyId());
         }
     }
 

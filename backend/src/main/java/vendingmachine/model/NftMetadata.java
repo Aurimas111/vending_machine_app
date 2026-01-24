@@ -119,11 +119,11 @@ public class NftMetadata {
         this.receiverAddress = receiverAddress;
     }
 
-    public int getTimeStamp() {
+    public Integer getTimeStamp() {
         return timeStamp;
     }
 
-    public void setTimeStamp(int timeStamp) {
+    public void setTimeStamp(Integer timeStamp) {
         this.timeStamp = timeStamp;
     }
 

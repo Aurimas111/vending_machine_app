@@ -6,13 +6,11 @@ import com.bloxbean.cardano.client.api.model.Result;
 import com.bloxbean.cardano.client.backend.model.AddressTransactionContent;
 import com.bloxbean.cardano.client.backend.model.TransactionContent;
 import com.bloxbean.cardano.client.backend.model.TxContentUtxo;
-import com.bloxbean.cardano.client.exception.CborSerializationException;
 import org.springframework.stereotype.Service;
 import vendingmachine.model.PolicyObject;
 import vendingmachine.repository.TransactionDataRepository;
 import vendingmachine.utils.Base;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -20,13 +18,13 @@ import java.util.Objects;
 @Service
 public class ReadTransactionsService extends Base {
 
-    private TransactionDataRepository transactionDataRepository;
+    private final TransactionDataRepository transactionDataRepository;
 
     public ReadTransactionsService(TransactionDataRepository transactionDataRepository) {
         this.transactionDataRepository = transactionDataRepository;
     }
 
-    public void readTx(String mintingAddress, int mintPrice, int limitAmountPerTx, PolicyObject policy) throws ApiException, SQLException, CborSerializationException {
+    public void readTx(String mintingAddress, int mintPrice, int limitAmountPerTx, PolicyObject policy) throws ApiException {
 
         // Read all transactions received to the minting address and save their txhash, blocktime, blockheight, txindex
         Result<List<AddressTransactionContent>> result;

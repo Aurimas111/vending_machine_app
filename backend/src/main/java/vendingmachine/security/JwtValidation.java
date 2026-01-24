@@ -6,7 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import vendingmachine.model.UserConfig;
-import vendingmachine.utils.DbOperations;
+import vendingmachine.repository.UserConfigRepository;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -19,10 +19,10 @@ public class JwtValidation {
     @Value("${vending.app.jwtSecret}")
     private String jwtSecret;
 
-    private DbOperations dbOperations;
+    private final UserConfigRepository userConfigRepository;
 
-    public JwtValidation(DbOperations dbOperations) {
-        this.dbOperations = dbOperations;
+    public JwtValidation(UserConfigRepository userConfigRepository) {
+        this.userConfigRepository = userConfigRepository;
     }
 
     public JwtValidationResult validateToken(String token) {
@@ -41,7 +41,7 @@ public class JwtValidation {
 
             String address = claims.get("address", String.class);
 
-            UserConfig userConfig = dbOperations.getUserConfig(address);
+            UserConfig userConfig = userConfigRepository.findByOwnerWalletAddress(address);
 
             return new JwtValidationResult(
                     true,

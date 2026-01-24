@@ -9,6 +9,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import vendingmachine.model.NftMetadata;
+import vendingmachine.model.PolicyObject;
 import vendingmachine.model.UserConfig;
 import vendingmachine.repository.NftMetadataRepository;
 import vendingmachine.repository.PolicyRepository;
@@ -40,8 +41,12 @@ public class ConfigService extends Base {
         this.readMetadataService = readMetadataService;
     }
 
-    public UserConfig getConfig(String address) {
-        return userConfigRepository.findByOwnerWalletAddress(address);
+    public UserConfig getConfig(String address) throws SQLException {
+        UserConfig userConfig = userConfigRepository.findByOwnerWalletAddress(address);
+        userConfig.setPolicy(dbOperations.getPolicyByWallet(address));
+        userConfig.setMetadataList(nftMetadataRepository.readConfigMetadata(userConfig.getPolicyId()));
+
+        return userConfig;
     }
 
     public Boolean deletePolicy(String address) throws SQLException {
@@ -85,13 +90,12 @@ public class ConfigService extends Base {
 
         Keys keys = KeyGenUtil.generateKey();
         Policy policy = readMetadataService.createEpochPolicy(collectionName, blockService.getLatestBlock().getValue().getSlot(), epochs, keys);
-        DbOperations.insertPolicyWithAddress(policy,
-                keys.getVkey().getCborHex(),
-                keys.getSkey().getCborHex(),
-                address); // save the new policy in db
+        PolicyObject policyObject = new PolicyObject(policy.getPolicyKeys().toString(), policy.getPolicyId(), policy.getPolicyScript().toString(), policy.getName(),  keys.getVkey().getCborHex(), keys.getSkey().getCborHex(), address);
+        policyRepository.save(policyObject);
 
         userConfig.setPolicy(policy);
-        userConfig.setPolicySlot(DbOperations.getPolicySlot(policy.getName()));
+        String policySlot = policy.getPolicyScript().toString().substring( policy.getPolicyScript().toString().indexOf("slot=")+5,  policy.getPolicyScript().toString().indexOf("),"));
+        userConfig.setPolicySlot(policySlot);
         userConfigRepository.insertUserConfig(userConfig);
 
         return policy;
@@ -165,7 +169,8 @@ public class ConfigService extends Base {
             );
             if (policy != null) {
                 userConfig.setPolicy(policy);
-                userConfig.setPolicySlot(DbOperations.getPolicySlot(policy.getName()));
+                String policyScript = policyRepository.findPolicyScriptByOwnerWallet(address);
+                userConfig.setPolicySlot(policyScript.substring(policyScript.indexOf("slot=")+5, policyScript.indexOf("),")));
             }
 
             userConfigRepository.insertUserConfig(userConfig);
