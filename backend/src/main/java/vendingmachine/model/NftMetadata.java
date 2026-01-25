@@ -1,7 +1,10 @@
 package vendingmachine.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Entity
@@ -188,6 +191,22 @@ public class NftMetadata {
 
     public void setDynamicAttributes(Map<String, String> dynamicAttributes) {
         this.dynamicAttributes = dynamicAttributes;
+    }
+
+    @PostLoad
+    public void onPostLoad() {
+        parseDynamicAttributes();
+    }
+
+    public void parseDynamicAttributes() {
+        if (this.attributes != null && !this.attributes.isEmpty()) {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                this.dynamicAttributes = mapper.readValue(this.attributes, new TypeReference<Map<String, String>>() {});
+            } catch (Exception e) {
+                this.dynamicAttributes = new HashMap<>();
+            }
+        }
     }
 
     @Override

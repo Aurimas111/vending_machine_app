@@ -9,6 +9,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import vendingmachine.model.NftMetadata;
 import vendingmachine.model.PolicyObject;
@@ -28,6 +30,7 @@ import java.util.Map;
 
 @Service
 public class ConfigService extends Base {
+    private static final Logger log = LoggerFactory.getLogger(ConfigService.class);
 
     private final UserConfigRepository userConfigRepository;
     private final NftMetadataRepository nftMetadataRepository;
@@ -89,7 +92,7 @@ public class ConfigService extends Base {
             userConfig.setCollectionName(collectionName);
         }
         int epochs = obj.getInt("policyLockEpoch");
-        System.out.println("Creating policy for user: " + address + ", with collection name: " + collectionName);
+        log.info("Creating policy for user: {}, with collection name: {}", address, collectionName);
 
         Keys keys = KeyGenUtil.generateKey();
         Policy policy = readMetadataService.createEpochPolicy(collectionName, blockService.getLatestBlock().getValue().getSlot(), epochs, keys);

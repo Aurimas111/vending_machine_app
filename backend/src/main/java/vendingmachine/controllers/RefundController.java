@@ -19,7 +19,6 @@ public class RefundController {
         this.vendingMachineService = vendingMachineService;
     }
 
-    // start refunds for the wallet address
     @PostMapping("/startrefunds")
     public ResponseEntity<?> startRefunds(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException {
 
@@ -27,7 +26,6 @@ public class RefundController {
         return ResponseEntity.ok("Refunds started");
     }
 
-    // stop refunds for the wallet address
     @PostMapping("/stoprefunds")
     public ResponseEntity<?> stopRefunds(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException {
 

@@ -7,10 +7,10 @@ import jakarta.persistence.*;
 public class TransactionData {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String txHash;
-    @Transient
-    private int txIndex;
+    private Integer txIndex;
     private int blockTime;
     @Column(name = "amountSent")
     private int amount;
@@ -24,13 +24,12 @@ public class TransactionData {
     private String status;
     @Transient
     private Boolean validAddress;
-    @Transient
     private int blockHeight;
 
     public TransactionData() {
     }
 
-    public TransactionData(String txHash, int txIndex, int blockTime, int amount,
+    public TransactionData(String txHash, Integer txIndex, int blockTime, int amount,
                            String senderAddress, int refund, int amountToMint, String policyId, Boolean refunded) {
         this.txHash = txHash;
         this.txIndex = txIndex;
@@ -112,11 +111,11 @@ public class TransactionData {
         this.txHash = txHash;
     }
 
-    public int getTxIndex() {
+    public Integer getTxIndex() {
         return txIndex;
     }
 
-    public void setTxIndex(int txIndex) {
+    public void setTxIndex(Integer txIndex) {
         this.txIndex = txIndex;
     }
 

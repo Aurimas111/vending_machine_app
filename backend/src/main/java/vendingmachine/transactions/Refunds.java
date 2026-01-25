@@ -1,5 +1,7 @@
 package vendingmachine.transactions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import vendingmachine.dto.RefundDataDTO;
 import vendingmachine.model.RefundStatus;
@@ -27,7 +29,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class Refunds extends Base {
-
+    private static final Logger log = LoggerFactory.getLogger(Refunds.class);
     ArrayList<RefundDataDTO> refundDataDTOS = new ArrayList<>();
 
     private final TransactionDataRepository transactionDataRepository;
@@ -42,17 +44,17 @@ public class Refunds extends Base {
         String senderAddress = sender.baseAddress();
 
         while(!stopFlag.get()) {
-            System.out.println("Refunds started for policy: " + policy.getPolicyId());
+            log.info("Starting refund process for policy: {}", policy.getPolicyId());
 
             refundDataDTOS = transactionDataRepository.findRefundDataByPolicyId(policy.getPolicyId(), refundReceiverLimit);
             if (refundDataDTOS.isEmpty())
                 refundsDone = true;
 
-            System.out.printf("Refunds to be processed: %d\n", refundDataDTOS.size());
+            log.info("Refunds to be processed: {}", refundDataDTOS.size());
 
             while (!refundsDone) {
                 if (stopFlag.get()) {
-                    System.out.println("Refund process stopped externally.");
+                    log.info("Refund process stopped externally for policy: {}", policy.getPolicyId());
                     return;
                 }
 
@@ -68,7 +70,7 @@ public class Refunds extends Base {
                         .compose(tx)
                         .feePayer(senderAddress)
                         .withSigner(SignerProviders.signerFrom(sender))
-                        .completeAndWait(System.out::println);
+                        .completeAndWait(log::info);
 
                 if (result.isSuccessful()) {
                     publisher.send(ownerWalletAddress, new RefundStatusMessage(
@@ -84,7 +86,7 @@ public class Refunds extends Base {
                     transactionDataRepository.updateRefundedTxsByTxHashesAndPolicyId(txHashList, policy.getPolicyId());
                     refundDataDTOS.clear();
 
-                    System.out.println("sleeping for 10 seconds");
+                    log.info("Sleeping for 10 seconds before checking for more refunds for policy: {}", policy.getPolicyId());
                     TimeUnit.SECONDS.sleep(10);
 
                     refundDataDTOS = transactionDataRepository.findRefundDataByPolicyId(policy.getPolicyId(), refundReceiverLimit);
@@ -99,12 +101,12 @@ public class Refunds extends Base {
                             result.getValue(),
                             "Refund Failed"
                     ));
-                    System.out.println("Transaction failed: " + result);
+                    log.info("Transaction failed: {}", result);
                 }
             }
 
-            System.out.println("Refunds completed!");
-            System.out.println("Sleeping for 10 seconds before next check");
+            log.info("All refunds processed for policy: {}", policy.getPolicyId());
+            log.info("Sleeping for 10 seconds before next check");
             TimeUnit.SECONDS.sleep(10);
         }
     }

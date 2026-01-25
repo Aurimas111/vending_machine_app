@@ -66,7 +66,6 @@ public class ConfigController {
         }
     }
 
-    // delete metadata associated with user's policy
     @DeleteMapping("/deletemetadata")
     public ResponseEntity<?> deleteMetadata(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException, ApiException {
 

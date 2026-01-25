@@ -1,9 +1,12 @@
 package vendingmachine.transactions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import vendingmachine.model.*;
 import vendingmachine.repository.NftMetadataRepository;
 import vendingmachine.repository.TransactionDataRepository;
+import vendingmachine.services.VendingMachineService;
 import vendingmachine.services.VendingMachineStatusPublisher;
 import vendingmachine.utils.Base;
 
@@ -33,6 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 public class MintMultipleNfts extends Base {
+    private static final Logger log = LoggerFactory.getLogger(MintMultipleNfts.class);
     static ArrayList<TransactionData> mintTransactions = new ArrayList<>();
     private final ReadTransactionsService readTransactionsService;
     private final TransactionDataRepository transactionDataRepository;
@@ -58,11 +62,11 @@ public class MintMultipleNfts extends Base {
 
         Integer mintCounter = transactionDataRepository.getMintedNftCountByPolicyId(policy.getPolicyId());
         mintCounter = (mintCounter == null) ? 0 : mintCounter;
-        System.out.println("Minted NFT count: " + mintCounter);
+        log.info("Minted NFT count: {}", mintCounter);
 
         if (mintCounter <= collectionSize - amountOfNftsNotToMint) {
             while (!stopFlag.get()) {
-                System.out.printf("trying to mint %d NFTs\n", mintLimitPerTx);
+                log.info("trying to mint {} NFTs ", mintLimitPerTx);
                 publisher.send(ownerWalletAddress, new MintStatusMessage(policy.getPolicyId(), MintStatus.STARTED, "", "Trying to mint " + mintLimitPerTx + " NFTs"));
                 mintTransactions.clear();
                 notMintedAddress.clear();
@@ -72,18 +76,19 @@ public class MintMultipleNfts extends Base {
 
                 mintTransactions = transactionDataRepository.findAllByPolicyIdForMinting(policy.getPolicyId());
 
-                System.out.println(mintTransactions.size() + " transactions received");
+                log.info("{} transactions received for minting", mintTransactions.size());
 
                 if (mintTransactions.isEmpty()) {
-                    System.out.println("No transactions received, waiting for 5 seconds");
+                    log.info("No transactions received, waiting for 5 seconds");
                     TimeUnit.SECONDS.sleep(5);
                     continue;
                 }
 
                 metadataNotMinted = nftMetadataRepository.findAllNotMintedByPolicyId(policy.getPolicyId());
+//                metadataNotMinted.forEach(NftMetadata::parseDynamicAttributes);
 
                 if (metadataNotMinted.size() < mintLimitPerTx + amountOfNftsNotToMint) {
-                    System.out.println("Not enough metadata available to mint " + mintLimitPerTx + " NFTs");
+                    log.info("Not enough metadata available to mint {} NFTs", mintLimitPerTx);
                     stopFlag.set(true);
                     return;
                 }
@@ -101,23 +106,20 @@ public class MintMultipleNfts extends Base {
                         }
                     }
                 }
-                System.out.print("Amounts to mint: ");
-                for (int j = 0; j < amountsToMint.size(); j++) {
-                    System.out.print(amountsToMint.get(j) + "  ");
-                }
-                System.out.println();
+
+                log.info("Amounts to mint: {}", amountsToMint);
 
                 // loop until we have enough addresses
                 if (notMintedAddress.size() == mintLimitPerTx) {
                     mintNfts(policy, metadataNotMinted, slot, sender, notMintedAddress, txHashNotMinted, amountsToMint, mintLimitPerTx, publisher, ownerWalletAddress);
 
-                    System.out.println("sleeping for 10 seconds");
+                    log.info("Sleeping for 10 seconds before next minting batch");
                     TimeUnit.SECONDS.sleep(10);
                 }
             }
 
         } else {
-            System.out.println("All NFTs minted!");
+            log.info("All NFTs have been minted for policyId: {}", policy.getPolicyId());
             stopFlag.set(true);
         }
     }
@@ -168,10 +170,10 @@ public class MintMultipleNfts extends Base {
                     .withSigner(SignerProviders.signerFrom(sender))
                     .withSigner(SignerProviders.signerFrom(policy))
                     .validTo(ttl)  // policy is going to lock at the saved slot
-                    .completeAndWait(System.out::println);
+                    .completeAndWait(log::info);
 
             if (result.isSuccessful()) {
-                System.out.println("Transaction Id: " + result.getValue());
+                log.info("Transaction Id: {}", result.getValue());
                 publisher.send(ownerWalletAddress, new MintStatusMessage(
                         policy.getPolicyId(),
                         MintStatus.MINTED,
@@ -200,7 +202,7 @@ public class MintMultipleNfts extends Base {
                     nftMetadataRepository.updateMetadataMinted(result.getValue(), blockTime, receivers.get(i), policy.getPolicyId(), metadataNotMinted.get(i).getName());
                 }
             } else {
-                System.out.println("Transaction failed: " + result);
+                log.info("Transaction failed: {}", result);
                 publisher.send(ownerWalletAddress, new MintStatusMessage(
                         policy.getPolicyId(),
                         MintStatus.FAILED,
@@ -210,7 +212,7 @@ public class MintMultipleNfts extends Base {
             }
 
         } else {
-            System.out.println("Not enough receivers to make a transaction for " + receivers.size() + " NFTs");
+            log.info("Not enough receivers to make a transaction for {} NFTs", receivers.size());
         }
     }
 

@@ -37,6 +37,9 @@ public class Start extends Base implements CommandLineRunner {
 
     @Override
     public void run(String[] args) throws IOException, ParseException, SQLException, CborSerializationException, APIException {
+
+        // Just to upload images to ipfs storage and save ipfs hashes to database
+/*
         Account sender = new Account(Networks.preprod(), Constant.RECOVERY_PHRASE);
         String mintingAddress = sender.baseAddress();
 
@@ -61,7 +64,7 @@ public class Start extends Base implements CommandLineRunner {
             //Collections.shuffle(metadataList); // shuffle to not mint all NFTs in a row
 
             dbOperations.saveMetadata(metadataList, policy.getPolicyId());
-        }
+        }*/
     }
 
     public static Policy createEpochPolicy(String name, long currentSlot, long epochs, Keys keys) {
