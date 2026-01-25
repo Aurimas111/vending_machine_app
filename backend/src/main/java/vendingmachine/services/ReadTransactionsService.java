@@ -12,9 +12,8 @@ import vendingmachine.repository.TransactionDataRepository;
 import vendingmachine.utils.Base;
 import vendingmachine.model.TransactionData;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ReadTransactionsService extends Base {
@@ -30,6 +29,7 @@ public class ReadTransactionsService extends Base {
         // Read all transactions received to the minting address and save their txhash, blocktime, blockheight, txindex
         Result<List<AddressTransactionContent>> result;
         ArrayList<AddressTransactionContent> tx = new ArrayList<>();
+        ArrayList<TransactionData> transactionsToSave = new ArrayList<>();
 
         int pages = 1;
         while (true) {
@@ -48,6 +48,8 @@ public class ReadTransactionsService extends Base {
 
             pages++;
         }
+
+        Set<String> existingTxHashes = new HashSet<>(transactionDataRepository.findExistingTxHashes(tx.stream().map(AddressTransactionContent::getTxHash).collect(Collectors.toList())));
 
         // Txhash allows to get all tx utxos
         for (int i = 0; i < tx.size(); i++) {
@@ -76,7 +78,7 @@ public class ReadTransactionsService extends Base {
                         refunded = false;
                     }
 
-                    if (!transactionDataRepository.existsByTxHash(tx.get(i).getTxHash())) {
+                    if (!existingTxHashes.contains(tx.get(i).getTxHash())) {
                         TransactionData transactionData = new TransactionData(
                                 tx.get(i).getTxHash(),
                                 txUtxo.getValue().getInputs().get(0).getAddress(),
@@ -92,9 +94,12 @@ public class ReadTransactionsService extends Base {
                         transactionData.setPolicyId(policy.getPolicyId());
                         transactionData.setRefunded(refunded);
 
-                        transactionDataRepository.save(transactionData);
+                        transactionsToSave.add(transactionData);
                     }
                 }
+            }
+            if (!transactionsToSave.isEmpty()) {
+                transactionDataRepository.saveAll(transactionsToSave);
             }
         }
     }
