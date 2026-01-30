@@ -1,5 +1,6 @@
 package vendingmachine.transactions;
 
+import com.bloxbean.cardano.client.backend.api.BackendService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -8,7 +9,6 @@ import vendingmachine.model.RefundStatus;
 import vendingmachine.model.RefundStatusMessage;
 import vendingmachine.repository.TransactionDataRepository;
 import vendingmachine.services.VendingMachineStatusPublisher;
-import vendingmachine.utils.Base;
 import com.bloxbean.cardano.client.account.Account;
 import com.bloxbean.cardano.client.api.exception.ApiException;
 import com.bloxbean.cardano.client.api.model.Amount;
@@ -28,14 +28,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Service
-public class Refunds extends Base {
+public class Refunds {
     private static final Logger log = LoggerFactory.getLogger(Refunds.class);
     ArrayList<RefundDataDTO> refundDataDTOS = new ArrayList<>();
 
     private final TransactionDataRepository transactionDataRepository;
+    private final BackendService backendService;
 
-    public Refunds(TransactionDataRepository transactionDataRepository) {
+    public Refunds(TransactionDataRepository transactionDataRepository, BackendService backendService) {
         this.transactionDataRepository = transactionDataRepository;
+        this.backendService = backendService;
     }
 
     public void startRefund(Account sender, Policy policy, int refundReceiverLimit, AtomicBoolean stopFlag, VendingMachineStatusPublisher publisher, String ownerWalletAddress) throws SQLException, CborSerializationException, ApiException, InterruptedException {
@@ -43,7 +45,7 @@ public class Refunds extends Base {
         boolean refundsDone = false;
         String senderAddress = sender.baseAddress();
 
-        while(!stopFlag.get()) {
+        while (!stopFlag.get()) {
             log.info("Starting refund process for policy: {}", policy.getPolicyId());
 
             refundDataDTOS = transactionDataRepository.findRefundDataByPolicyId(policy.getPolicyId(), refundReceiverLimit);

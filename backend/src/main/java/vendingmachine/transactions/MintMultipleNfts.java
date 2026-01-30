@@ -1,14 +1,13 @@
 package vendingmachine.transactions;
 
+import com.bloxbean.cardano.client.backend.api.BackendService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import vendingmachine.model.*;
 import vendingmachine.repository.NftMetadataRepository;
 import vendingmachine.repository.TransactionDataRepository;
-import vendingmachine.services.VendingMachineService;
 import vendingmachine.services.VendingMachineStatusPublisher;
-import vendingmachine.utils.Base;
 
 import vendingmachine.services.ReadTransactionsService;
 import com.bloxbean.cardano.client.account.Account;
@@ -35,17 +34,19 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
-public class MintMultipleNfts extends Base {
+public class MintMultipleNfts {
     private static final Logger log = LoggerFactory.getLogger(MintMultipleNfts.class);
     static ArrayList<TransactionData> mintTransactions = new ArrayList<>();
     private final ReadTransactionsService readTransactionsService;
     private final TransactionDataRepository transactionDataRepository;
     private final NftMetadataRepository nftMetadataRepository;
+    private final BackendService backendService;
 
-    public MintMultipleNfts(ReadTransactionsService readTransactionsService, TransactionDataRepository transactionDataRepository, NftMetadataRepository nftMetadataRepository) {
+    public MintMultipleNfts(ReadTransactionsService readTransactionsService, TransactionDataRepository transactionDataRepository, NftMetadataRepository nftMetadataRepository, BackendService backendService) {
         this.readTransactionsService = readTransactionsService;
         this.transactionDataRepository = transactionDataRepository;
         this.nftMetadataRepository = nftMetadataRepository;
+        this.backendService = backendService;
     }
 
     // This method queues the minting of NFTs based on the provided parameters

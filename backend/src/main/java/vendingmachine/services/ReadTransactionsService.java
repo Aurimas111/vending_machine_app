@@ -6,22 +6,27 @@ import com.bloxbean.cardano.client.api.model.Result;
 import com.bloxbean.cardano.client.backend.model.AddressTransactionContent;
 import com.bloxbean.cardano.client.backend.model.TransactionContent;
 import com.bloxbean.cardano.client.backend.model.TxContentUtxo;
+import com.bloxbean.cardano.client.backend.api.AddressService;
+import com.bloxbean.cardano.client.backend.api.TransactionService;
 import org.springframework.stereotype.Service;
 import vendingmachine.model.PolicyObject;
 import vendingmachine.repository.TransactionDataRepository;
-import vendingmachine.utils.Base;
 import vendingmachine.model.TransactionData;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class ReadTransactionsService extends Base {
+public class ReadTransactionsService {
 
     private final TransactionDataRepository transactionDataRepository;
+    private final AddressService addressService;
+    private final TransactionService transactionService;
 
-    public ReadTransactionsService(TransactionDataRepository transactionDataRepository) {
+    public ReadTransactionsService(TransactionDataRepository transactionDataRepository, AddressService addressService, TransactionService transactionService) {
         this.transactionDataRepository = transactionDataRepository;
+        this.addressService = addressService;
+        this.transactionService = transactionService;
     }
 
     public void readTx(String mintingAddress, int mintPrice, int limitAmountPerTx, PolicyObject policy) throws ApiException {

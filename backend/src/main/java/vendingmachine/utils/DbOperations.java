@@ -2,6 +2,7 @@ package vendingmachine.utils;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import vendingmachine.model.*;
 import com.bloxbean.cardano.client.crypto.SecretKey;
@@ -22,19 +23,23 @@ public class DbOperations {
 
     private final PolicyRepository policyRepository;
 
+    @Value("${spring.datasource.url}")
+    private String dbUrl;
+    @Value("${spring.datasource.username}")
+    private String dbUser;
+    @Value("${spring.datasource.password}")
+    private String dbPassword;
+
     public DbOperations(PolicyRepository policyRepository) {
         this.policyRepository = policyRepository;
     }
 
     private Connection connectToDb() {
 
-        String DB_URL = Constant.DB_URL;
-        String USER = Constant.DB_USER;
-        String PASS = Constant.DB_PASSWORD;
         Connection connection = null;
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            connection = DriverManager.getConnection(DB_URL, USER, PASS);
+            connection = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         }

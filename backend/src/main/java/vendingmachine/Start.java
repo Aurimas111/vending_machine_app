@@ -1,12 +1,13 @@
 package vendingmachine;
 
 import com.bloxbean.cardano.client.account.Account;
+import com.bloxbean.cardano.client.common.model.Network;
 import com.bloxbean.cardano.client.common.model.Networks;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import vendingmachine.model.NftMetadata;
 import vendingmachine.services.ReadMetadataService;
-import vendingmachine.utils.Base;
 import com.bloxbean.cardano.client.crypto.Keys;
 import com.bloxbean.cardano.client.crypto.VerificationKey;
 import com.bloxbean.cardano.client.exception.CborSerializationException;
@@ -25,10 +26,17 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 @Component
-public class Start extends Base implements CommandLineRunner {
+public class Start implements CommandLineRunner {
     private static final long SLOTS_PER_EPOCH = 5 * 24 * 60 * 60;
     private final DbOperations dbOperations;
     private final ReadMetadataService readMetadataService;
+
+    @Value("${recovery.phrase}")
+    private String recoveryPhrase;
+    @Value("${network.id}")
+    private int networkId;
+    @Value("${network.magic}")
+    private long networkMagic;
 
     public Start(DbOperations dbOperations, ReadMetadataService readMetadataService) {
         this.dbOperations = dbOperations;
@@ -40,7 +48,7 @@ public class Start extends Base implements CommandLineRunner {
 
         // Just to upload images to ipfs storage and save ipfs hashes to database
 /*
-        Account sender = new Account(Networks.preprod(), Constant.RECOVERY_PHRASE);
+        Account sender = new Account(new Network(networkId, networkMagic), recoveryPhrase);
         String mintingAddress = sender.baseAddress();
 
         System.out.println("Wallet address: " + mintingAddress);

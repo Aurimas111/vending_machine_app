@@ -1,6 +1,7 @@
 package vendingmachine.services;
 
 import com.bloxbean.cardano.client.api.exception.ApiException;
+import com.bloxbean.cardano.client.backend.api.BlockService;
 import com.bloxbean.cardano.client.crypto.KeyGenUtil;
 import com.bloxbean.cardano.client.crypto.Keys;
 import com.bloxbean.cardano.client.exception.CborSerializationException;
@@ -18,9 +19,7 @@ import vendingmachine.model.UserConfig;
 import vendingmachine.repository.NftMetadataRepository;
 import vendingmachine.repository.PolicyRepository;
 import vendingmachine.repository.UserConfigRepository;
-import vendingmachine.utils.Base;
 import vendingmachine.utils.DbOperations;
-import vendingmachine.services.ReadMetadataService;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -29,7 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-public class ConfigService extends Base {
+public class ConfigService {
     private static final Logger log = LoggerFactory.getLogger(ConfigService.class);
 
     private final UserConfigRepository userConfigRepository;
@@ -38,13 +37,15 @@ public class ConfigService extends Base {
     private final DbOperations dbOperations;
     private final ReadMetadataService readMetadataService;
     private final ObjectMapper mapper = new ObjectMapper();
+    private final BlockService blockService;
 
-    public ConfigService(UserConfigRepository userConfigRepository, NftMetadataRepository nftMetadataRepository, DbOperations dbOperations, PolicyRepository policyRepository, ReadMetadataService readMetadataService) {
+    public ConfigService(UserConfigRepository userConfigRepository, NftMetadataRepository nftMetadataRepository, DbOperations dbOperations, PolicyRepository policyRepository, ReadMetadataService readMetadataService, BlockService blockService) {
         this.userConfigRepository = userConfigRepository;
         this.nftMetadataRepository = nftMetadataRepository;
         this.dbOperations = dbOperations;
         this.policyRepository = policyRepository;
         this.readMetadataService = readMetadataService;
+        this.blockService = blockService;
     }
 
     public UserConfig getConfig(String address) throws SQLException {

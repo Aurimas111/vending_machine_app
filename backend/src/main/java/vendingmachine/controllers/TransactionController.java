@@ -2,7 +2,7 @@ package vendingmachine.controllers;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import vendingmachine.dto.response.TransactionResponse;
-import vendingmachine.services.TransactionService;
+import vendingmachine.services.TransactionFetchingService;
 import com.bloxbean.cardano.client.api.exception.ApiException;
 import com.bloxbean.cardano.client.exception.CborSerializationException;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +14,9 @@ import java.sql.SQLException;
 @RequestMapping("/api/minter")
 public class TransactionController {
 
-    private final TransactionService transactionService;
+    private final TransactionFetchingService transactionService;
 
-    public TransactionController(TransactionService transactionService) {
+    public TransactionController(TransactionFetchingService transactionService) {
         this.transactionService = transactionService;
     }
 

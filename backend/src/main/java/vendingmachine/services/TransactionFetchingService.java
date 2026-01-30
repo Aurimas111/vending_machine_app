@@ -2,8 +2,8 @@ package vendingmachine.services;
 
 import com.bloxbean.cardano.client.account.Account;
 import com.bloxbean.cardano.client.api.exception.ApiException;
-import com.bloxbean.cardano.client.common.model.Networks;
-import com.bloxbean.cardano.client.exception.CborSerializationException;
+import com.bloxbean.cardano.client.common.model.Network;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import vendingmachine.model.NftMetadata;
 import vendingmachine.model.PolicyObject;
@@ -14,13 +14,11 @@ import vendingmachine.repository.NftMetadataRepository;
 import vendingmachine.repository.PolicyRepository;
 import vendingmachine.repository.TransactionDataRepository;
 import vendingmachine.repository.UserConfigRepository;
-import vendingmachine.utils.Constant;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 
 @Service
-public class TransactionService {
+public class TransactionFetchingService {
 
     private final PolicyRepository policyRepository;
     private final UserConfigRepository userConfigRepository;
@@ -28,7 +26,14 @@ public class TransactionService {
     private final TransactionDataRepository transactionDataRepository;
     private final NftMetadataRepository nftMetadataRepository;
 
-    public TransactionService(ReadTransactionsService readTransactionsService, PolicyRepository policyRepository, UserConfigRepository userConfigRepository, TransactionDataRepository transactionDataRepository, NftMetadataRepository nftMetadataRepository) {
+    @Value("${recovery.phrase}")
+    private String recoveryPhrase;
+    @Value("${network.id}")
+    private int networkId;
+    @Value("${network.magic}")
+    private long networkMagic;
+
+    public TransactionFetchingService(ReadTransactionsService readTransactionsService, PolicyRepository policyRepository, UserConfigRepository userConfigRepository, TransactionDataRepository transactionDataRepository, NftMetadataRepository nftMetadataRepository) {
         this.readTransactionsService = readTransactionsService;
         this.policyRepository = policyRepository;
         this.userConfigRepository = userConfigRepository;
@@ -36,8 +41,8 @@ public class TransactionService {
         this.nftMetadataRepository = nftMetadataRepository;
     }
 
-    public TransactionResponse getTransactions(String address) throws CborSerializationException, SQLException, ApiException {
-        Account account = new Account(Networks.preprod(), Constant.RECOVERY_PHRASE);
+    public TransactionResponse getTransactions(String address) throws ApiException {
+        Account account = new Account(new Network(networkId, networkMagic), recoveryPhrase);
         PolicyObject policy = policyRepository.findByOwnerWallet(address);
         UserConfig userConfig = userConfigRepository.findByOwnerWalletAddress(address);
 

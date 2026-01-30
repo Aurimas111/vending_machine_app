@@ -1,6 +1,8 @@
 package vendingmachine.services;
 
+import com.bloxbean.cardano.client.common.model.Network;
 import com.bloxbean.cardano.client.transaction.spec.Policy;
+import org.springframework.beans.factory.annotation.Value;
 import vendingmachine.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,10 +10,8 @@ import vendingmachine.repository.PolicyRepository;
 import vendingmachine.repository.UserConfigRepository;
 import vendingmachine.transactions.MintMultipleNfts;
 import vendingmachine.transactions.Refunds;
-import vendingmachine.utils.Constant;
 import com.bloxbean.cardano.client.account.Account;
 import com.bloxbean.cardano.client.api.exception.ApiException;
-import com.bloxbean.cardano.client.common.model.Networks;
 import com.bloxbean.cardano.client.exception.CborSerializationException;
 import org.springframework.stereotype.Service;
 import vendingmachine.utils.DbOperations;
@@ -29,8 +29,15 @@ public class VendingMachineService {
     private final MintMultipleNfts mintMultipleNfts;
     private final PolicyRepository policyRepository;
     private final UserConfigRepository userConfigRepository;
-    private DbOperations dbOperations;
+    private final DbOperations dbOperations;
     private final Refunds refunds;
+
+    @Value("${recovery.phrase}")
+    private String recoveryPhrase;
+    @Value("${network.id}")
+    private int networkId;
+    @Value("${network.magic}")
+    private long networkMagic;
 
     public VendingMachineService(VendingMachineStatusPublisher publisher, MintMultipleNfts mintMultipleNfts, PolicyRepository policyRepository, UserConfigRepository userConfigRepository, DbOperations dbOperations, Refunds refunds) {
         this.publisher = publisher;
@@ -50,7 +57,7 @@ public class VendingMachineService {
         Session session = new Session();
         activeSessions.put(userAddress, session);
 
-        Account sender = new Account(Networks.preprod(), Constant.RECOVERY_PHRASE);
+        Account sender = new Account(new Network(networkId, networkMagic), recoveryPhrase);
         Policy policy = dbOperations.getPolicyByWallet(userAddress);
         UserConfig userConfig = userConfigRepository.findByOwnerWalletAddress(userAddress);
         String slot = userConfig.getPolicySlot();
@@ -103,7 +110,7 @@ public class VendingMachineService {
 
         Policy policy = dbOperations.getPolicyByWallet(userAddress);
         UserConfig userConfig = userConfigRepository.findByOwnerWalletAddress(userAddress);
-        Account account = new Account(Networks.preprod(), Constant.RECOVERY_PHRASE);
+        Account account = new Account(new Network(networkId, networkMagic), recoveryPhrase);
 
         int amountOfRefundsPerTx = userConfig.getRefundsPerTxLimit();
 

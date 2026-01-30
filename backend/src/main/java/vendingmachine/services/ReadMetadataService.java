@@ -1,5 +1,6 @@
 package vendingmachine.services;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import vendingmachine.model.*;
 import com.bloxbean.cardano.client.crypto.Keys;
@@ -19,7 +20,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import vendingmachine.utils.Constant;
 
 import java.io.File;
 import java.io.FileReader;
@@ -32,6 +32,11 @@ import java.util.Map;
 @Service
 public class ReadMetadataService {
     private static final long SLOTS_PER_EPOCH = 5 * 24 * 60 * 60;
+
+    @Value("${ipfs.api.key}")
+    private String ipfsKey;
+    @Value("${ipfs.api.url}")
+    private String ipfsApiUrl;
 
     public ArrayList<NftMetadata> read(String folderPath) throws IOException, ParseException {
         JSONParser parser = new JSONParser();
@@ -72,7 +77,7 @@ public class ReadMetadataService {
 
     public ArrayList<String> uploadImages(ArrayList<NftMetadata> metadata) throws APIException, IOException {
         ArrayList<String> ipfs = new ArrayList<>();
-        IPFSService ipfsService = new IPFSServiceImpl("https://ipfs.blockfrost.io/api/v0/", Constant.IPFS_KEY);
+        IPFSService ipfsService = new IPFSServiceImpl(ipfsApiUrl, ipfsKey);
         IPFSObject ipfsObject = new IPFSObject();
         PinResponse pinResponse = new PinResponse();
         PinItem pin = new PinItem();
@@ -83,7 +88,6 @@ public class ReadMetadataService {
 
             ipfs.add(pin.getIpfsHash());
         }
-
 
         // unpin everything
         /*List<PinItem> pins = ipfsService.getAllPinnedObjects();
@@ -96,7 +100,7 @@ public class ReadMetadataService {
     public ArrayList<String> getImages() throws APIException {
         ArrayList<String> ipfsHashes = new ArrayList<>();
         List<PinItem> pinnedObjects = new ArrayList<>();
-        IPFSService ipfsService = new IPFSServiceImpl("https://ipfs.blockfrost.io/api/v0/", Constant.IPFS_KEY);
+        IPFSService ipfsService = new IPFSServiceImpl(ipfsApiUrl, ipfsKey);
         pinnedObjects = ipfsService.getAllPinnedObjects(OrderEnum.asc);
         for (int i = 0; i < pinnedObjects.size(); i++) {
             ipfsHashes.add(pinnedObjects.get(i).getIpfsHash());
