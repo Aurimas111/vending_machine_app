@@ -27,8 +27,7 @@ public class WebSocketAuthListener {
             throw new IllegalArgumentException("Missing JWT in WebSocket CONNECT");
         }
 
-        JwtValidationResult result =
-                jwtValidation.validateToken(authHeader.substring(7));
+        JwtValidationResult result = jwtValidation.validateToken(authHeader.substring(7));
 
         if (!result.isValid()) {
             throw new IllegalArgumentException("Invalid JWT in WebSocket CONNECT");

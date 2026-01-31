@@ -8,7 +8,7 @@ import vendingmachine.dto.RefundDataDTO;
 import vendingmachine.model.RefundStatus;
 import vendingmachine.model.RefundStatusMessage;
 import vendingmachine.repository.TransactionDataRepository;
-import vendingmachine.services.VendingMachineStatusPublisher;
+import vendingmachine.services.StatusPublisher;
 import com.bloxbean.cardano.client.account.Account;
 import com.bloxbean.cardano.client.api.exception.ApiException;
 import com.bloxbean.cardano.client.api.model.Amount;
@@ -34,13 +34,15 @@ public class Refunds {
 
     private final TransactionDataRepository transactionDataRepository;
     private final BackendService backendService;
+    private final StatusPublisher statusPublisher;
 
-    public Refunds(TransactionDataRepository transactionDataRepository, BackendService backendService) {
+    public Refunds(TransactionDataRepository transactionDataRepository, BackendService backendService, StatusPublisher statusPublisher) {
         this.transactionDataRepository = transactionDataRepository;
         this.backendService = backendService;
+        this.statusPublisher = statusPublisher;
     }
 
-    public void startRefund(Account sender, Policy policy, int refundReceiverLimit, AtomicBoolean stopFlag, VendingMachineStatusPublisher publisher, String ownerWalletAddress) throws SQLException, CborSerializationException, ApiException, InterruptedException {
+    public void startRefund(Account sender, Policy policy, int refundReceiverLimit, AtomicBoolean stopFlag, String ownerWalletAddress) throws SQLException, CborSerializationException, ApiException, InterruptedException {
 
         boolean refundsDone = false;
         String senderAddress = sender.baseAddress();
@@ -75,7 +77,7 @@ public class Refunds {
                         .completeAndWait(log::info);
 
                 if (result.isSuccessful()) {
-                    publisher.send(ownerWalletAddress, new RefundStatusMessage(
+                    statusPublisher.sendRefundStatus(ownerWalletAddress, new RefundStatusMessage(
                             policy.getPolicyId(),
                             RefundStatus.COMPLETED,
                             result.getValue(),
@@ -97,7 +99,7 @@ public class Refunds {
 
 
                 } else {
-                    publisher.send(ownerWalletAddress, new RefundStatusMessage(
+                    statusPublisher.sendRefundStatus(ownerWalletAddress, new RefundStatusMessage(
                             policy.getPolicyId(),
                             RefundStatus.FAILED,
                             result.getValue(),

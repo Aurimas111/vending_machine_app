@@ -6,7 +6,7 @@ import vendingmachine.model.MintStatusMessage;
 import vendingmachine.model.RefundStatusMessage;
 
 @Service
-public class VendingMachineStatusPublisher {
+public class VendingMachineStatusPublisher implements StatusPublisher {
 
     private final SimpMessagingTemplate messagingTemplate;
 
@@ -17,14 +17,16 @@ public class VendingMachineStatusPublisher {
     // should update the topic to not use wallet address, since its easy to guess
     // a good solution would be to use user id instead
 
-    public void send(String walletAddress, MintStatusMessage msg) {
+    @Override
+    public void sendMintStatus(String walletAddress, MintStatusMessage msg) {
         messagingTemplate.convertAndSend(
                 "/topic/vending-machine-status/" + walletAddress,
                 msg
         );
     }
 
-    public void send(String walletAddress, RefundStatusMessage msg) {
+    @Override
+    public void sendRefundStatus(String walletAddress, RefundStatusMessage msg) {
         messagingTemplate.convertAndSend(
                 "/topic/vending-machine-status/" + walletAddress,
                 msg

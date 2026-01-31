@@ -17,7 +17,6 @@ import com.bloxbean.cardano.client.transaction.spec.script.ScriptAll;
 import com.bloxbean.cardano.client.transaction.spec.script.ScriptPubkey;
 import io.blockfrost.sdk.api.exception.APIException;
 import org.json.simple.parser.ParseException;
-import vendingmachine.utils.Constant;
 import vendingmachine.utils.DbOperations;
 
 import java.io.IOException;

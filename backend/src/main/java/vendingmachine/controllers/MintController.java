@@ -4,7 +4,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import vendingmachine.model.NftMetadata;
 import vendingmachine.services.MintService;
 import vendingmachine.services.VendingMachineService;
-import com.bloxbean.cardano.client.exception.CborSerializationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,21 +24,21 @@ public class MintController {
     }
 
     @GetMapping("/getmints")
-    public ResponseEntity<?> getMints(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException {
+    public ResponseEntity<?> getMints(@AuthenticationPrincipal String wallet) throws SQLException {
 
         ArrayList<NftMetadata> metadata = mintService.getMints(wallet);
         return ResponseEntity.ok(metadata);
     }
 
     @PostMapping("/startmint")
-    public ResponseEntity<?> startMint(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException {
+    public ResponseEntity<?> startMint(@AuthenticationPrincipal String wallet) throws SQLException {
 
         vendingMachineService.startMinting(wallet);
         return ResponseEntity.ok("Minting started");
     }
 
     @PostMapping("/stopmint")
-    public ResponseEntity<?> stopMint(@AuthenticationPrincipal String wallet) throws SQLException, CborSerializationException {
+    public ResponseEntity<?> stopMint(@AuthenticationPrincipal String wallet) {
 
         vendingMachineService.stopMinting(wallet);
         return ResponseEntity.ok("Minting stopped");

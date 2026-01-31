@@ -49,25 +49,25 @@ public class TransactionFetchingService {
         readTransactionsService.readTx(account.baseAddress(), userConfig.getNFTPrice(), userConfig.getNFTsReservedPerTx(), policy);
 
         ArrayList<TransactionData> transactions = transactionDataRepository.findAllByPolicyId(policy.getPolicyId());
-        for(int i = 0; i < transactions.size(); i++) {
-            if (transactions.get(i).getAmountToMint() == 0 && transactions.get(i).getAmountMinted()>0) {
+        for (int i = 0; i < transactions.size(); i++) {
+            if (transactions.get(i).getAmountToMint() == 0 && transactions.get(i).getAmountMinted() > 0) {
                 transactions.get(i).setStatus("Minted");
-            } else if( transactions.get(i).getAmountToMint()>0) {
+            } else if (transactions.get(i).getAmountToMint() > 0) {
                 transactions.get(i).setStatus("Minting");
-            }else if(transactions.get(i).getRefunded() != null && transactions.get(i).getRefunded()) {
+            } else if (transactions.get(i).getRefunded() != null && transactions.get(i).getRefunded()) {
                 transactions.get(i).setStatus("Refunded");
-            }else{
+            } else {
                 transactions.get(i).setStatus("Pending");
             }
         }
 
-        ArrayList<NftMetadata> metadata =  nftMetadataRepository.findAllByPolicyId(policy.getPolicyId());
+        ArrayList<NftMetadata> metadata = nftMetadataRepository.findAllByPolicyId(policy.getPolicyId());
         int amountMinted = transactionDataRepository.sumAmountMintedByPolicyId(policy.getPolicyId());
 
         TransactionResponse transactionResponse = new TransactionResponse(transactions,
                 metadata.size(),
                 amountMinted,
-                (double) userConfig.getNFTPrice() /1000000,
+                (double) userConfig.getNFTPrice() / 1000000,
                 account.baseAddress());
 
         return transactionResponse;

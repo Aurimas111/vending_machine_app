@@ -16,11 +16,11 @@ public class CardanoConfig {
     @Value("${blockfrost.api.url}")
     private String blockfrostUrl;
     @Value("${blockfrost.api.key}")
-    private String projectKey;
+    private String blockfrostApiKey;
 
     @Bean
     public BackendService backendService() {
-        return new BFBackendService(blockfrostUrl, projectKey);
+        return new BFBackendService(blockfrostUrl, blockfrostApiKey);
     }
 
     @Bean

@@ -72,7 +72,7 @@ public class ConfigService {
         }
     }
 
-    public Policy createPolicy(String data, String address) throws SQLException, CborSerializationException, ApiException {
+    public Policy createPolicy(String data, String address) throws CborSerializationException, ApiException {
 
         // Check if UserConfig exists, if not, create a new one with default values
         JSONObject obj = new JSONObject(data);
@@ -97,11 +97,11 @@ public class ConfigService {
 
         Keys keys = KeyGenUtil.generateKey();
         Policy policy = readMetadataService.createEpochPolicy(collectionName, blockService.getLatestBlock().getValue().getSlot(), epochs, keys);
-        PolicyObject policyObject = new PolicyObject(policy.getPolicyKeys().toString(), policy.getPolicyId(), policy.getPolicyScript().toString(), policy.getName(),  keys.getVkey().getCborHex(), keys.getSkey().getCborHex(), address);
+        PolicyObject policyObject = new PolicyObject(policy.getPolicyKeys().toString(), policy.getPolicyId(), policy.getPolicyScript().toString(), policy.getName(), keys.getVkey().getCborHex(), keys.getSkey().getCborHex(), address);
         policyRepository.save(policyObject);
 
         userConfig.setPolicy(policy);
-        String policySlot = policy.getPolicyScript().toString().substring( policy.getPolicyScript().toString().indexOf("slot=")+5,  policy.getPolicyScript().toString().indexOf("),"));
+        String policySlot = policy.getPolicyScript().toString().substring(policy.getPolicyScript().toString().indexOf("slot=") + 5, policy.getPolicyScript().toString().indexOf("),"));
         userConfig.setPolicySlot(policySlot);
         userConfigRepository.insertUserConfig(userConfig);
 
@@ -183,7 +183,7 @@ public class ConfigService {
             if (policy != null) {
                 userConfig.setPolicy(policy);
                 String policyScript = policyRepository.findPolicyScriptByOwnerWallet(address);
-                userConfig.setPolicySlot(policyScript.substring(policyScript.indexOf("slot=")+5, policyScript.indexOf("),")));
+                userConfig.setPolicySlot(policyScript.substring(policyScript.indexOf("slot=") + 5, policyScript.indexOf("),")));
             }
 
             userConfigRepository.insertUserConfig(userConfig);

@@ -25,12 +25,12 @@ public class VendingMachineService {
     private static final Logger log = LoggerFactory.getLogger(VendingMachineService.class);
     private static final Map<String, Session> activeSessions = new ConcurrentHashMap<>();
 
-    private final VendingMachineStatusPublisher publisher;
     private final MintMultipleNfts mintMultipleNfts;
     private final PolicyRepository policyRepository;
     private final UserConfigRepository userConfigRepository;
     private final DbOperations dbOperations;
     private final Refunds refunds;
+    private final StatusPublisher statusPublisher;
 
     @Value("${recovery.phrase}")
     private String recoveryPhrase;
@@ -39,13 +39,13 @@ public class VendingMachineService {
     @Value("${network.magic}")
     private long networkMagic;
 
-    public VendingMachineService(VendingMachineStatusPublisher publisher, MintMultipleNfts mintMultipleNfts, PolicyRepository policyRepository, UserConfigRepository userConfigRepository, DbOperations dbOperations, Refunds refunds) {
-        this.publisher = publisher;
+    public VendingMachineService(MintMultipleNfts mintMultipleNfts, PolicyRepository policyRepository, UserConfigRepository userConfigRepository, DbOperations dbOperations, Refunds refunds, StatusPublisher statusPublisher) {
         this.mintMultipleNfts = mintMultipleNfts;
         this.policyRepository = policyRepository;
         this.userConfigRepository = userConfigRepository;
         this.dbOperations = dbOperations;
         this.refunds = refunds;
+        this.statusPublisher = statusPublisher;
     }
 
     public void startMinting(String userAddress) throws SQLException {
@@ -67,8 +67,8 @@ public class VendingMachineService {
         new Thread(() -> {
             try {
                 log.info("Calling minting logic for user: {}", userAddress);
-                publisher.send(userConfig.getOwnerWalletAddress(), new MintStatusMessage(policy.getPolicyId(), MintStatus.STARTED, "", "Minting process started and being monitored"));
-                mintMultipleNfts.queue(sender, policy, slot, mintLimitPerTx, amountOfNftsNotToMint, session.getStopFlag(), publisher, userConfig.getOwnerWalletAddress());
+                statusPublisher.sendMintStatus(userConfig.getOwnerWalletAddress(), new MintStatusMessage(policy.getPolicyId(), MintStatus.STARTED, "", "Minting process started and being monitored"));
+                mintMultipleNfts.queue(sender, policy, slot, mintLimitPerTx, amountOfNftsNotToMint, session.getStopFlag(), userConfig.getOwnerWalletAddress());
                 Thread.sleep(5000);
 
             } catch (CborSerializationException | SQLException | InterruptedException | ApiException e) {
@@ -78,7 +78,7 @@ public class VendingMachineService {
                 activeSessions.remove(userAddress);
                 log.info("Stopped minting loop for user: {}", userAddress);
                 try {
-                    publisher.send(userConfig.getOwnerWalletAddress(), new MintStatusMessage(policy.getPolicyId(), MintStatus.STOPPED, "", "Minting has been stopped"));
+                    statusPublisher.sendMintStatus(userConfig.getOwnerWalletAddress(), new MintStatusMessage(policy.getPolicyId(), MintStatus.STOPPED, "", "Minting has been stopped"));
                 } catch (CborSerializationException e) {
                     throw new RuntimeException(e);
                 }
@@ -93,7 +93,7 @@ public class VendingMachineService {
         if (session != null) {
             session.stop();
             log.info("Requested to stop minting for user: {}", userAddress);
-            publisher.send(userConfig.getOwnerWalletAddress(), new MintStatusMessage(policy.getPolicyId(), MintStatus.STARTED, "", "Minting will be stopped after the last submitted transaction is confirmed"));
+            statusPublisher.sendMintStatus(userConfig.getOwnerWalletAddress(), new MintStatusMessage(policy.getPolicyId(), MintStatus.STARTED, "", "Minting will be stopped after the last submitted transaction is confirmed"));
         } else {
             log.info("No active minting session found for user: {}", userAddress);
         }
@@ -116,10 +116,10 @@ public class VendingMachineService {
 
         new Thread(() -> {
             try {
-                publisher.send(userConfig.getOwnerWalletAddress(), new RefundStatusMessage(policy.getPolicyId(), RefundStatus.INITIATED, "", "Refund process started and being monitored"));
+                statusPublisher.sendRefundStatus(userConfig.getOwnerWalletAddress(), new RefundStatusMessage(policy.getPolicyId(), RefundStatus.INITIATED, "", "Refund process started and being monitored"));
 
                 log.info("Calling refund logic for user: {}", userAddress);
-                refunds.startRefund(account, policy, amountOfRefundsPerTx, session.getStopFlag(), publisher, userConfig.getOwnerWalletAddress());
+                refunds.startRefund(account, policy, amountOfRefundsPerTx, session.getStopFlag(), userConfig.getOwnerWalletAddress());
                 Thread.sleep(5000);
 
             } catch (CborSerializationException | SQLException | InterruptedException | ApiException e) {
@@ -129,7 +129,7 @@ public class VendingMachineService {
                 activeSessions.remove(userAddress);
                 log.info("Stopped refund loop for user: {}", userAddress);
                 try {
-                    publisher.send(userConfig.getOwnerWalletAddress(), new RefundStatusMessage(policy.getPolicyId(), RefundStatus.STOPPED, "", "Refund process has been stopped"));
+                    statusPublisher.sendRefundStatus(userConfig.getOwnerWalletAddress(), new RefundStatusMessage(policy.getPolicyId(), RefundStatus.STOPPED, "", "Refund process has been stopped"));
                 } catch (CborSerializationException e) {
                     throw new RuntimeException(e);
                 }
@@ -144,7 +144,7 @@ public class VendingMachineService {
         if (session != null) {
             session.stop();
             log.info("Requested to stop refunding for user: {}", userAddress);
-            publisher.send(userConfig.getOwnerWalletAddress(), new RefundStatusMessage(policy.getPolicyId(), RefundStatus.STOPPED, "", "Refund process has been stopped"));
+            statusPublisher.sendRefundStatus(userConfig.getOwnerWalletAddress(), new RefundStatusMessage(policy.getPolicyId(), RefundStatus.STOPPED, "", "Refund process has been stopped"));
         } else {
             log.info("No active refunding session found for user: {}", userAddress);
         }
