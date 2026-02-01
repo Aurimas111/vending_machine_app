@@ -7,7 +7,6 @@ import vendingmachine.model.PolicyObject;
 import vendingmachine.repository.NftMetadataRepository;
 import vendingmachine.repository.PolicyRepository;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 
 @Service
@@ -21,7 +20,7 @@ public class MintService {
         this.policyRepository = policyRepository;
     }
 
-    public ArrayList<NftMetadata> getMints(String address) throws SQLException {
+    public ArrayList<NftMetadata> getMints(String address) {
         PolicyObject policy = policyRepository.findByOwnerWallet(address);
         return nftMetadataRepository.findAllByPolicyId(policy.getPolicyId());
     }

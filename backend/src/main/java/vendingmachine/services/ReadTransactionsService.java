@@ -70,7 +70,8 @@ public class ReadTransactionsService {
                 Boolean refunded = null;
                 if (txUtxo.getValue().getOutputs().get(j).getAddress().equals(mintingAddress) &&
                         Integer.parseInt(txUtxo.getValue().getOutputs().get(j).getAmount().get(0).getQuantity()) >= mintPrice &&
-                        txUtxo.getValue().getOutputs().get(j).getAmount().get(0).getUnit().equals("lovelace") && !Objects.equals(txUtxo.getValue().getInputs().get(0).getAddress(), mintingAddress)) { //Patikrinti ar nera problemu su tuo kad naudotojas galimai su 1 output isisunte daugiau nei viena skiritnga asseta
+                        txUtxo.getValue().getOutputs().get(j).getAmount().get(0).getUnit().equals("lovelace") &&
+                        !Objects.equals(txUtxo.getValue().getInputs().get(0).getAddress(), mintingAddress)) { //Patikrinti ar nera problemu su tuo kad naudotojas galimai su 1 output isisunte daugiau nei viena skiritnga asseta
 
                     int amountToMint = Integer.parseInt(txUtxo.getValue().getOutputs().get(j).getAmount().get(0).getQuantity()) / mintPrice;
                     if (amountToMint >= limitAmountPerTx)
