@@ -36,7 +36,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Service
 public class MintMultipleNfts {
     private static final Logger log = LoggerFactory.getLogger(MintMultipleNfts.class);
-    static ArrayList<TransactionData> mintTransactions = new ArrayList<>();
     private final ReadTransactionsService readTransactionsService;
     private final TransactionDataRepository transactionDataRepository;
     private final NftMetadataRepository nftMetadataRepository;
@@ -56,6 +55,7 @@ public class MintMultipleNfts {
     // handles the minting process in batches defined by mintLimitPerTx
     public void queue(Account sender, Policy policy, String slot, int mintLimitPerTx, int amountOfNftsNotToMint, AtomicBoolean stopFlag, String ownerWalletAddress) throws SQLException, CborSerializationException, InterruptedException, ApiException {
 
+        ArrayList<TransactionData> mintTransactions = new ArrayList<>();
         ArrayList<NftMetadata> metadataNotMinted = new ArrayList<>();
         ArrayList<String> txHashNotMinted = new ArrayList<>();
         ArrayList<String> notMintedAddress = new ArrayList<>();
@@ -114,7 +114,7 @@ public class MintMultipleNfts {
 
                 // loop until we have enough addresses
                 if (notMintedAddress.size() == mintLimitPerTx) {
-                    mintNfts(policy, metadataNotMinted, slot, sender, notMintedAddress, txHashNotMinted, amountsToMint, mintLimitPerTx, ownerWalletAddress);
+                    mintNfts(policy, metadataNotMinted, slot, sender, notMintedAddress, txHashNotMinted, amountsToMint, mintLimitPerTx, ownerWalletAddress, mintTransactions);
 
                     log.info("Sleeping for 10 seconds before next minting batch");
                     TimeUnit.SECONDS.sleep(10);
@@ -129,7 +129,7 @@ public class MintMultipleNfts {
 
     // This method mints NFTs based on the provided policy, metadata, slot, sender account, receivers, transaction hashes, and amounts to mint
     // creates a transaction for minting the NFTs and attaches the metadata
-    public void mintNfts(Policy policy, ArrayList<NftMetadata> metadataNotMinted, String slot, Account sender, ArrayList<String> receivers, ArrayList<String> txHashes, ArrayList<Integer> amountToMint, int mintLimitPerTx , String ownerWalletAddress) throws CborSerializationException, ApiException, InterruptedException {
+    public void mintNfts(Policy policy, ArrayList<NftMetadata> metadataNotMinted, String slot, Account sender, ArrayList<String> receivers, ArrayList<String> txHashes, ArrayList<Integer> amountToMint, int mintLimitPerTx, String ownerWalletAddress, ArrayList<TransactionData> mintTransactions) throws CborSerializationException, ApiException, InterruptedException {
 
         ArrayList<Asset> assets = new ArrayList<>();
 

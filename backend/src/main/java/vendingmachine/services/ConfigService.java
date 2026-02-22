@@ -190,9 +190,9 @@ public class ConfigService {
             return "UserConfig created successfully";
         } else {
             // Update the existing UserConfig
-            userConfig.setNFTPrice(obj.getInt("nftPrice"));
-            userConfig.setNFTsReservedPerTx(obj.getInt("nftsReservedPerTx"));
-            userConfig.setNFTsToMintPerTx(obj.getInt("nftsToMintPerTx"));
+            userConfig.setNftPrice(obj.getInt("nftPrice"));
+            userConfig.setNftsReservedPerTx(obj.getInt("nftsReservedPerTx"));
+            userConfig.setNftsToMintPerTx(obj.getInt("nftsToMintPerTx"));
             userConfig.setAmountOfNFTsNotToMint(obj.getInt("nftsToNotMint"));
             userConfig.setRefundsPerTxLimit(obj.getInt("refundsPerTxLimit"));
 

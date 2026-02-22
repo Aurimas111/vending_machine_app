@@ -30,8 +30,6 @@ import java.util.stream.Collectors;
 @Service
 public class Refunds {
     private static final Logger log = LoggerFactory.getLogger(Refunds.class);
-    ArrayList<RefundDataDTO> refundDataDTOS = new ArrayList<>();
-
     private final TransactionDataRepository transactionDataRepository;
     private final BackendService backendService;
     private final StatusPublisher statusPublisher;
@@ -43,7 +41,7 @@ public class Refunds {
     }
 
     public void startRefund(Account sender, Policy policy, int refundReceiverLimit, AtomicBoolean stopFlag, String ownerWalletAddress) throws SQLException, CborSerializationException, ApiException, InterruptedException {
-
+        ArrayList<RefundDataDTO> refundDataDTOS;
         boolean refundsDone = false;
         String senderAddress = sender.baseAddress();
 

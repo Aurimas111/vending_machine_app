@@ -46,7 +46,7 @@ public class TransactionFetchingService {
         PolicyObject policy = policyRepository.findByOwnerWallet(address);
         UserConfig userConfig = userConfigRepository.findByOwnerWalletAddress(address);
 
-        readTransactionsService.readTx(account.baseAddress(), userConfig.getNFTPrice(), userConfig.getNFTsReservedPerTx(), policy);
+        readTransactionsService.readTx(account.baseAddress(), userConfig.getNftPrice(), userConfig.getNftsReservedPerTx(), policy);
 
         ArrayList<TransactionData> transactions = transactionDataRepository.findAllByPolicyId(policy.getPolicyId());
         for (int i = 0; i < transactions.size(); i++) {
@@ -67,7 +67,7 @@ public class TransactionFetchingService {
         TransactionResponse transactionResponse = new TransactionResponse(transactions,
                 metadata.size(),
                 amountMinted,
-                (double) userConfig.getNFTPrice() / 1000000,
+                (double) userConfig.getNftPrice() / 1000000,
                 account.baseAddress());
 
         return transactionResponse;

@@ -8,14 +8,14 @@ public class TransactionResponse {
     private ArrayList<TransactionData> transactions;
     private int totalNFTCount;
     private int mintedNFTCount;
-    private double NFTPrice;
+    private double nftPrice;
     private String monitoringAddress;
 
-    public TransactionResponse(ArrayList<TransactionData> transactions, int totalNFTCount, int mintedNFTCount, double NFTPrice, String monitoringAddress) {
+    public TransactionResponse(ArrayList<TransactionData> transactions, int totalNFTCount, int mintedNFTCount, double nftPrice, String monitoringAddress) {
         this.transactions = transactions;
         this.totalNFTCount = totalNFTCount;
         this.mintedNFTCount = mintedNFTCount;
-        this.NFTPrice = NFTPrice;
+        this.nftPrice = nftPrice;
         this.monitoringAddress = monitoringAddress;
     }
 
@@ -51,13 +51,13 @@ public class TransactionResponse {
 
         this.mintedNFTCount = mintedNFTCount;
     }
-    public double getNFTPrice() {
+    public double getNftPrice() {
 
-        return NFTPrice;
+        return nftPrice;
     }
-    public void setNFTPrice(double NFTPrice) {
+    public void setNftPrice(double nftPrice) {
 
-        this.NFTPrice = NFTPrice;
+        this.nftPrice = nftPrice;
     }
 
     @Override
@@ -66,7 +66,7 @@ public class TransactionResponse {
                 "transactions=" + transactions +
                 ", totalNFTCount=" + totalNFTCount +
                 ", mintedNFTCount=" + mintedNFTCount +
-                ", NFTPrice=" + NFTPrice +
+                ", nftPrice=" + nftPrice +
                 '}';
     }
 }

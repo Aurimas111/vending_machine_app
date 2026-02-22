@@ -49,19 +49,18 @@ public class VendingMachineService {
     }
 
     public void startMinting(String userAddress) throws SQLException {
-        if (activeSessions.containsKey(userAddress)) {
+        Session session = new Session();
+
+        if (activeSessions.putIfAbsent(userAddress, session) != null) {
             log.info("Minting already in progress for user: {}", userAddress);
             return;
         }
-
-        Session session = new Session();
-        activeSessions.put(userAddress, session);
 
         Account sender = new Account(new Network(networkId, networkMagic), recoveryPhrase);
         Policy policy = dbOperations.getPolicyByWallet(userAddress);
         UserConfig userConfig = userConfigRepository.findByOwnerWalletAddress(userAddress);
         String slot = userConfig.getPolicySlot();
-        int mintLimitPerTx = userConfig.getNFTsToMintPerTx();
+        int mintLimitPerTx = userConfig.getNftsToMintPerTx();
         int amountOfNftsNotToMint = userConfig.getAmountOfNFTsNotToMint();
 
         new Thread(() -> {
@@ -100,13 +99,11 @@ public class VendingMachineService {
     }
 
     public void startRefunding(String userAddress) throws SQLException {
-        if (activeSessions.containsKey(userAddress)) {
+        Session session = new Session();
+        if(activeSessions.putIfAbsent(userAddress, session) != null) {
             log.info("Refunding already in progress for user: {}", userAddress);
             return;
         }
-
-        Session session = new Session();
-        activeSessions.put(userAddress, session);
 
         Policy policy = dbOperations.getPolicyByWallet(userAddress);
         UserConfig userConfig = userConfigRepository.findByOwnerWalletAddress(userAddress);

@@ -23,65 +23,65 @@ public class UserConfig {
     @Column(name = "collection_name")
     private String collectionName;
     @Column(name = "nft_price")
-    private int NFTPrice;
+    private int nftPrice;
     @Column(name = "collection_size")
     private int collectionSize;
     @Column(name = "nft_reserved_per_tx")
-    private int NFTsReservedPerTx;
+    private int nftsReservedPerTx;
     @Column(name = "nft_to_mint_per_tx")
-    private int NFTsToMintPerTx;
+    private int nftsToMintPerTx;
     @Column(name = "amount_of_nft_not_to_mint")
-    private int AmountOfNFTsNotToMint;
+    private int amountOfNFTsNotToMint;
     @Column(name = "refund_per_tx_limit")
-    private int RefundsPerTxLimit;
+    private int refundsPerTxLimit;
     @Column(name = "policy_id")
     private String policyId;
 
     public UserConfig() {
     }
 
-    public UserConfig(String ownerWalletAddress, Policy policy, String policySlot, ArrayList<MetadataResponse> metadataList, String collectionName, int NFTPrice, int collectionSize, int NFTsReservedPerTx, int NFTsToMintPerTx, int amountOfNFTsNotToMint, int refundsPerTxLimit) {
+    public UserConfig(String ownerWalletAddress, Policy policy, String policySlot, ArrayList<MetadataResponse> metadataList, String collectionName, int nftPrice, int collectionSize, int nftsReservedPerTx, int nftsToMintPerTx, int amountOfNFTsNotToMint, int refundsPerTxLimit) {
         this.ownerWalletAddress = ownerWalletAddress;
         this.policy = policy;
         this.policySlot = policySlot;
         this.metadataList = metadataList;
         this.collectionName = collectionName;
-        this.NFTPrice = NFTPrice;
+        this.nftPrice = nftPrice;
         this.collectionSize = collectionSize;
-        this.NFTsReservedPerTx = NFTsReservedPerTx;
-        this.NFTsToMintPerTx = NFTsToMintPerTx;
-        this.AmountOfNFTsNotToMint = amountOfNFTsNotToMint;
-        this.RefundsPerTxLimit = refundsPerTxLimit;
+        this.nftsReservedPerTx = nftsReservedPerTx;
+        this.nftsToMintPerTx = nftsToMintPerTx;
+        this.amountOfNFTsNotToMint = amountOfNFTsNotToMint;
+        this.refundsPerTxLimit = refundsPerTxLimit;
     }
 
-    public UserConfig(String ownerWalletAddress, String collectionName, int NFTPrice, int collectionSize, int NFTsReservedPerTx, int NFTsToMintPerTx, int amountOfNFTsNotToMint, int refundsPerTxLimit) {
+    public UserConfig(String ownerWalletAddress, String collectionName, int nftPrice, int collectionSize, int nftsReservedPerTx, int nftsToMintPerTx, int amountOfNFTsNotToMint, int refundsPerTxLimit) {
         this.ownerWalletAddress = ownerWalletAddress;
         this.collectionName = collectionName;
-        this.NFTPrice = NFTPrice;
+        this.nftPrice = nftPrice;
         this.collectionSize = collectionSize;
-        this.NFTsReservedPerTx = NFTsReservedPerTx;
-        this.NFTsToMintPerTx = NFTsToMintPerTx;
-        this.AmountOfNFTsNotToMint = amountOfNFTsNotToMint;
-        this.RefundsPerTxLimit = refundsPerTxLimit;
+        this.nftsReservedPerTx = nftsReservedPerTx;
+        this.nftsToMintPerTx = nftsToMintPerTx;
+        this.amountOfNFTsNotToMint = amountOfNFTsNotToMint;
+        this.refundsPerTxLimit = refundsPerTxLimit;
     }
 
     public UserConfig(String address, String collectionName, int nftPrice, int nftsReservedPerTx, int nftsToMintPerTx, int nftsToNotMint, int refundsPerTxLimit) {
         this.ownerWalletAddress = address;
         this.collectionName = collectionName;
-        this.NFTPrice = nftPrice;
-        this.NFTsReservedPerTx = nftsReservedPerTx;
-        this.NFTsToMintPerTx = nftsToMintPerTx;
-        this.AmountOfNFTsNotToMint = nftsToNotMint;
-        this.RefundsPerTxLimit = refundsPerTxLimit;
+        this.nftPrice = nftPrice;
+        this.nftsReservedPerTx = nftsReservedPerTx;
+        this.nftsToMintPerTx = nftsToMintPerTx;
+        this.amountOfNFTsNotToMint = nftsToNotMint;
+        this.refundsPerTxLimit = refundsPerTxLimit;
     }
 
     public UserConfig(String address, int nftPrice, int nftsReservedPerTx, int nftsToMintPerTx, int nftsToNotMint, int refundsPerTxLimit) {
         this.ownerWalletAddress = address;
-        this.NFTPrice = nftPrice;
-        this.NFTsReservedPerTx = nftsReservedPerTx;
-        this.NFTsToMintPerTx = nftsToMintPerTx;
-        this.AmountOfNFTsNotToMint = nftsToNotMint;
-        this.RefundsPerTxLimit = refundsPerTxLimit;
+        this.nftPrice = nftPrice;
+        this.nftsReservedPerTx = nftsReservedPerTx;
+        this.nftsToMintPerTx = nftsToMintPerTx;
+        this.amountOfNFTsNotToMint = nftsToNotMint;
+        this.refundsPerTxLimit = refundsPerTxLimit;
     }
 
     public Integer getId() {
@@ -147,14 +147,14 @@ public class UserConfig {
         this.collectionName = collectionName;
     }
 
-    public int getNFTPrice() {
+    public int getNftPrice() {
 
-        return NFTPrice;
+        return nftPrice;
     }
 
-    public void setNFTPrice(int NFTPrice) {
+    public void setNftPrice(int nftPrice) {
 
-        this.NFTPrice = NFTPrice;
+        this.nftPrice = nftPrice;
     }
 
     public int getCollectionSize() {
@@ -167,43 +167,43 @@ public class UserConfig {
         this.collectionSize = collectionSize;
     }
 
-    public int getNFTsReservedPerTx() {
+    public int getNftsReservedPerTx() {
 
-        return NFTsReservedPerTx;
+        return nftsReservedPerTx;
     }
 
-    public void setNFTsReservedPerTx(int NFTsReservedPerTx) {
+    public void setNftsReservedPerTx(int nftsReservedPerTx) {
 
-        this.NFTsReservedPerTx = NFTsReservedPerTx;
+        this.nftsReservedPerTx = nftsReservedPerTx;
     }
 
-    public int getNFTsToMintPerTx() {
+    public int getNftsToMintPerTx() {
 
-        return NFTsToMintPerTx;
+        return nftsToMintPerTx;
     }
 
-    public void setNFTsToMintPerTx(int NFTsToMintPerTx) {
+    public void setNftsToMintPerTx(int nftsToMintPerTx) {
 
-        this.NFTsToMintPerTx = NFTsToMintPerTx;
+        this.nftsToMintPerTx = nftsToMintPerTx;
     }
 
     public int getAmountOfNFTsNotToMint() {
 
-        return AmountOfNFTsNotToMint;
+        return amountOfNFTsNotToMint;
     }
 
     public void setAmountOfNFTsNotToMint(int amountOfNFTsNotToMint) {
 
-        AmountOfNFTsNotToMint = amountOfNFTsNotToMint;
+        this.amountOfNFTsNotToMint = amountOfNFTsNotToMint;
     }
 
     public int getRefundsPerTxLimit() {
 
-        return RefundsPerTxLimit;
+        return refundsPerTxLimit;
     }
 
     public void setRefundsPerTxLimit(int refundsPerTxLimit) {
-        RefundsPerTxLimit = refundsPerTxLimit;
+        this.refundsPerTxLimit = refundsPerTxLimit;
     }
 
     @Override
@@ -214,12 +214,12 @@ public class UserConfig {
                 ", policySlot='" + policySlot + '\'' +
                 ", metadataList=" + metadataList +
                 ", collectionName='" + collectionName + '\'' +
-                ", NFTPrice=" + NFTPrice +
+                ", nftPrice=" + nftPrice +
                 ", collectionSize=" + collectionSize +
-                ", NFTsReservedPerTx=" + NFTsReservedPerTx +
-                ", NFTsToMintPerTx=" + NFTsToMintPerTx +
-                ", AmountOfNFTsNotToMint=" + AmountOfNFTsNotToMint +
-                ", RefundsPerTxLimit=" + RefundsPerTxLimit +
+                ", nFTsReservedPerTx=" + nftsReservedPerTx +
+                ", nFTsToMintPerTx=" + nftsToMintPerTx +
+                ", amountOfNFTsNotToMint=" + amountOfNFTsNotToMint +
+                ", refundsPerTxLimit=" + refundsPerTxLimit +
                 '}';
     }
 }
