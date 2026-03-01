@@ -33,9 +33,11 @@ public class AuthService {
     private final Map<String, String> nonces = new ConcurrentHashMap<>();
 
     private final UserConfigRepository userConfigRepository;
+    private final CIP30VerifierFactory verifierFactory;
 
-    public AuthService(UserConfigRepository userConfigRepository) {
+    public AuthService(UserConfigRepository userConfigRepository, CIP30VerifierFactory verifierFactory) {
         this.userConfigRepository = userConfigRepository;
+        this.verifierFactory = verifierFactory;
     }
 
     public String generateNonce(String address) {
@@ -60,7 +62,7 @@ public class AuthService {
                 return new AuthResponse(false, null, "Invalid or expired nonce", null);
             }
 
-            var verifier = new CIP30Verifier(request.getSignature(), request.getKey());
+            var verifier = verifierFactory.createCIP30Verifier(request.getSignature(), request.getKey());
             var verificationResult = verifier.verify();
 
             if (!verificationResult.isValid()) {
