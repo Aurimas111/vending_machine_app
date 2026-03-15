@@ -12,7 +12,7 @@ services:
     restart: always
 
   backend:
-    image: aurimas123456/vending_machine_backend:v1.1
+    image: aurimas123456/vending_machine_backend:latest
     container_name: vending-backend
     depends_on:
       - mysql-db
@@ -28,7 +28,7 @@ services:
     restart: always
 
   frontend:
-    image: aurimas123456/vending_machine_frontend:v1.9
+    image: aurimas123456/vending_machine_frontend:latest
     container_name: vending-frontend
     depends_on:
       - backend
