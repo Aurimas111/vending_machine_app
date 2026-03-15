@@ -60,5 +60,5 @@ jobs:
             "echo '${{ secrets.DOCKER_PASSWORD }}' | docker login -u '${{ secrets.DOCKER_USERNAME }}' --password-stdin && \
              cd /home/vending-app && \
              docker image prune -f && \
-             docker compose pull && \
+             docker compose pull frontend backend mysql-db && \
              docker compose up frontend backend mysql-db -d --remove-orphans"
