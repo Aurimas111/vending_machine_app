@@ -1,8 +1,7 @@
-name: Build & Deploy
+name: Build and Deploy
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch: 
 
 jobs:
   build-and-deploy:
@@ -19,7 +18,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       # build and push backend
-      - name: Build & push backend
+      - name: Build and push backend
         uses: docker/build-push-action@v5
         with:
           context: ./backend
@@ -27,7 +26,7 @@ jobs:
           tags: aurimas123456/vending_machine_backend:latest
 
       # build and push frontned
-      - name: Build & push frontend
+      - name: Build and push frontend
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
