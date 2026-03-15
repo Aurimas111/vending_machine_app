@@ -48,17 +48,16 @@ jobs:
       # deploy on vps
       - name: Set up SSH
         run: |
-          ssh -i ~/.ssh/deploy_key \
-            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            "echo '${{ secrets.DOCKER_PASSWORD }}' | docker login -u '${{ secrets.DOCKER_USERNAME }}' --password-stdin && \
-             cd /home/vending-app && \
-             docker compose pull && \
-             docker compose up -d --remove-orphans"
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
 
       - name: Deploy on VPS
         run: |
           ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            "cd /home/vending-app && \
+            "echo '${{ secrets.DOCKER_PASSWORD }}' | docker login -u '${{ secrets.DOCKER_USERNAME }}' --password-stdin && \
+             cd /home/vending-app && \
              docker compose pull && \
              docker compose up -d --remove-orphans"
