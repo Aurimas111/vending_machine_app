@@ -35,6 +35,12 @@ jobs:
           push: true
           tags: aurimas123456/vending_machine_backend:latest
 
+      - name: Test frontend build
+        working-directory: ./frontend
+        run: |
+          npm install
+          npm run build
+
       # build and push frontned
       - name: Build and push frontend
         uses: docker/build-push-action@v5
