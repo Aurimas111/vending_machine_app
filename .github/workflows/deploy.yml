@@ -42,8 +42,6 @@ jobs:
           context: ./frontend
           push: true
           tags: aurimas123456/vending_machine_frontend:latest
-          build-args: |
-            VITE_API_URL=${{ secrets.VITE_API_URL }}
 
       # deploy on vps
       - name: Set up SSH
