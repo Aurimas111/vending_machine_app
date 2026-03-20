@@ -61,8 +61,8 @@ public class Refunds {
                 }
 
                 Tx tx = new Tx();
-                for (int i = 0; i < refundDataDTOS.size(); i++) {
-                    tx.payToAddress(refundDataDTOS.get(i).getRefundAddress(), Amount.ada((refundDataDTOS.get(i).getAmount() / 1000000) - 0.2));
+                for (RefundDataDTO refundDataDTO : refundDataDTOS) {
+                    tx.payToAddress(refundDataDTO.getRefundAddress(), Amount.ada((refundDataDTO.getAmount() / 1000000) - 0.2));
                 }
 
                 tx.attachMetadata(MessageMetadata.create().add("NFT mint refund")).from(senderAddress);

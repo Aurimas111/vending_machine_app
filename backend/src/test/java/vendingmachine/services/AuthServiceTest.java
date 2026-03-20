@@ -203,4 +203,20 @@ class AuthServiceTest {
 
         assertNull(authService.getNonce(TEST_ADDRESS));
     }
+
+    @Test
+    void authenticate_ShouldFailWhenSignatureIsInvalid() {
+        authService.generateNonce(TEST_ADDRESS);
+        LoginRequest request = new LoginRequest(TEST_ADDRESS, "key", "signature");
+
+        when(verifierFactory.createCIP30Verifier(request.getSignature(), request.getKey())).thenReturn(mockVerifier);
+        when(mockVerifier.verify()).thenReturn(mockResult);
+        when(mockResult.isValid()).thenReturn(false);
+
+        AuthResponse response = authService.authenticate(request);
+
+        assertFalse(response.isSuccess());
+        assertEquals("Invalid signature", response.getMessage());
+    }
+
 }

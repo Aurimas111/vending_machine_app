@@ -88,7 +88,6 @@ public class MintMultipleNfts {
                 }
 
                 metadataNotMinted = nftMetadataRepository.findAllNotMintedByPolicyId(policy.getPolicyId());
-//                metadataNotMinted.forEach(NftMetadata::parseDynamicAttributes);
 
                 if (metadataNotMinted.size() < mintLimitPerTx + amountOfNftsNotToMint) {
                     log.info("Not enough metadata available to mint {} NFTs", mintLimitPerTx);
@@ -129,8 +128,7 @@ public class MintMultipleNfts {
 
     // This method mints NFTs based on the provided policy, metadata, slot, sender account, receivers, transaction hashes, and amounts to mint
     // creates a transaction for minting the NFTs and attaches the metadata
-    public void mintNfts(Policy policy, ArrayList<NftMetadata> metadataNotMinted, String slot, Account sender, ArrayList<String> receivers, ArrayList<String> txHashes, ArrayList<Integer> amountToMint, int mintLimitPerTx, String ownerWalletAddress, ArrayList<TransactionData> mintTransactions) throws CborSerializationException, ApiException, InterruptedException {
-
+    private void mintNfts(Policy policy, ArrayList<NftMetadata> metadataNotMinted, String slot, Account sender, ArrayList<String> receivers, ArrayList<String> txHashes, ArrayList<Integer> amountToMint, int mintLimitPerTx, String ownerWalletAddress, ArrayList<TransactionData> mintTransactions) throws CborSerializationException, ApiException, InterruptedException {
         ArrayList<Asset> assets = new ArrayList<>();
 
         if (receivers.size() >= mintLimitPerTx) {
@@ -153,8 +151,9 @@ public class MintMultipleNfts {
                 //.setImages(List.of(base)) // for on chain nft images
 
                 // add all dynamic attributes as properties
-                for (Map.Entry<String, String> entry : metadataNotMinted.get(i).getDynamicAttributes().entrySet())
+                for (Map.Entry<String, String> entry : metadataNotMinted.get(i).getDynamicAttributes().entrySet()) {
                     nft.property(entry.getKey(), entry.getValue());
+                }
 
                 nftMetadata.addNFT(policy.getPolicyId(), nft);
             }
@@ -162,11 +161,11 @@ public class MintMultipleNfts {
             long ttl = Long.parseLong(slot);
 
             Tx tx = new Tx();
-            for (int i = 0; i < assets.size(); i++)
+            for (int i = 0; i < assets.size(); i++) {
                 tx.mintAssets(policy.getPolicyScript(), assets.get(i), receivers.get(i));
+            }
 
-            tx.attachMetadata(nftMetadata)
-                    .from(sender.baseAddress());
+            tx.attachMetadata(nftMetadata).from(sender.baseAddress());
 
             Result<String> result = new QuickTxBuilder(backendService)
                     .compose(tx)
